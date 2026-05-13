@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — LuxHaas Motors</title>
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <meta name="description" content="The story of LuxHaas Motors. Founded at the intersection of military precision and luxury craftsmanship.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .about-numbers {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: var(--border-gold);
+      border-left: var(--border-gold);
+    }
+    .about-num-item {
+      padding: 3rem 2rem;
+      border-right: var(--border-gold);
+      border-bottom: var(--border-gold);
+      text-align: center;
+    }
+    .about-num-value {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 4rem;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .about-num-label {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    @media (max-width:768px) {
+      .about-numbers { grid-template-columns: repeat(2,1fr); }
+      .about-hero { padding: 10rem 1.5rem 5rem; }
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 2px;
+      background: rgba(201,168,76,0.06);
+      max-width: 1200px;
+      margin: 4rem auto 0;
+    }
+    @media (max-width:768px) { .team-grid { grid-template-columns:1fr; } }
+    .team-card {
+      background: var(--gray-900);
+      padding: 3rem 2.5rem;
+      transition: background 0.4s;
+    }
+    .team-card:hover { background: var(--gray-800); }
+    .team-avatar {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      color: var(--black);
+      margin-bottom: 1.5rem;
+    }
+    .team-name {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      margin-bottom: 0.25rem;
+    }
+    .team-title {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+    .team-bio {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.42);
+      line-height: 1.75;
+    }
+
+    .promise-section {
+      padding: 8rem 3.5rem;
+      background: var(--black);
+      border-top: var(--border-gold);
+    }
+    .promise-grid {
+      max-width: 1200px;
+      margin: 4rem auto 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+    }
+    @media (max-width:768px) {
+      .promise-grid { grid-template-columns: 1fr; }
+      .promise-section { padding: 5rem 1.5rem; }
+    }
+    .promise-item {
+      padding: 2.5rem;
+      border: var(--border-gold);
+      background: rgba(201,168,76,0.02);
+      position: relative;
+    }
+    .promise-number {
+      position: absolute;
+      top: -1px; right: 2rem;
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      background: var(--black);
+      padding: 0 0.5rem;
+      transform: translateY(-50%);
+    }
+    .promise-item h3 {
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 0.85rem;
+    }
+    .promise-item p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor"></div>
+  <div class="cursor-ring"></div>
+  <div class="page-intro" id="pageIntro"><span class="intro-logo">LUXHAAS</span></div>
+
+  <!-- Navigation -->
+  <nav class="nav scrolled" id="mainNav">
+    <a href="/" class="nav-logo">
+      <span class="logo-mark">LUXHAAS</span>
+      <span class="logo-sub">Motors</span>
+    </a>
+    <div class="nav-links">
+      <a href="/inventory">Inventory</a>
+      <a href="/customize">Configure</a>
+      <a href="/about" class="active">About</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/contact" class="btn-gold">Schedule a Visit</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="/inventory">Inventory</a>
+    <a href="/customize">Configure</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+  </div>
+
+  <!-- ── About Hero ── -->
+  <section class="about-hero">
+    <div class="label reveal">Our Story</div>
+    <h1 class="reveal d1">The House<br>That <em>Precision</em><br>Built.</h1>
+    <p class="reveal d2">LuxHaas Motors was founded on a singular, unwavering conviction: that the most capable vehicles on earth deserve the most exceptional treatment. We are the world's foremost luxury HMWWV dealer — and we are entirely obsessed.</p>
+  </section>
+
+  <!-- ── Numbers ── -->
+  <div class="about-numbers">
+    <div class="about-num-item reveal">
+      <span class="about-num-value">847</span>
+      <span class="about-num-label">Vehicles Delivered</span>
+    </div>
+    <div class="about-num-item reveal d1">
+      <span class="about-num-value">23</span>
+      <span class="about-num-label">Countries Served</span>
+    </div>
+    <div class="about-num-item reveal d2">
+      <span class="about-num-value">6</span>
+      <span class="about-num-label">Years of Excellence</span>
+    </div>
+    <div class="about-num-item reveal d3">
+      <span class="about-num-value">100%</span>
+      <span class="about-num-label">Client Satisfaction</span>
+    </div>
+  </div>
+
+  <!-- ── Story Split ── -->
+  <div class="about-grid">
+    <div class="about-img-pane reveal left">
+      <img src="images/humvee-hero.jpg" alt="LuxHaas Workshop">
+    </div>
+    <div class="about-text-pane">
+      <div class="label reveal">The Beginning</div>
+      <h2 class="reveal d1">Born from<br><em>Obsession</em></h2>
+      <p class="reveal d2">LuxHaas was founded in 2018 by former military procurement officer Marcus Haas and automotive designer Elena Lux, who shared one conviction: the HMWWV — High Mobility Multipurpose Wheeled Vehicle — was the most capable, most iconic, and most under-appreciated vehicle ever built.</p>
+      <p class="reveal d3">What began as a passion project in a Texas warehouse has grown into the world's most recognized name in luxury tactical vehicles. We don't just sell Humvees. We curate, restore, reimagine, and deliver rolling legends — each one a collaboration between our craftsmen and the client's singular vision.</p>
+    </div>
+  </div>
+
+  <!-- ── Second Story Split ── -->
+  <div class="about-grid" style="direction:rtl;">
+    <div class="about-img-pane reveal right" style="direction:ltr;">
+      <img src="images/humvee-lifestyle.jpg" alt="LuxHaas — In the Field">
+    </div>
+    <div class="about-text-pane" style="direction:ltr;">
+      <div class="label reveal">Our Craft</div>
+      <h2 class="reveal d1">Built with<br><em>Intention</em></h2>
+      <p class="reveal d2">Every vehicle that enters our facility undergoes a comprehensive 180-point inspection and restoration process that can take up to eight months. We source only the finest materials — hand-stitched leather from Florence, billet components machined in Dusseldorf, electronics systems developed with aerospace-grade precision.</p>
+      <p class="reveal d3">When a LuxHaas vehicle leaves our workshop, it meets a standard that has no peer. It is not better than other Humvees. It is better than any vehicle, at any price, in any segment. This is our promise.</p>
+    </div>
+  </div>
+
+  <!-- ── Values ── -->
+  <section class="values-section">
+    <div style="max-width:1200px; margin:0 auto;">
+      <div class="label reveal">What We Believe</div>
+      <h2 class="reveal d1">Our Core <em>Values</em></h2>
+    </div>
+    <div class="values-grid">
+      <div class="value-card reveal">
+        <div class="value-num">01</div>
+        <h3>Obsession</h3>
+        <p>We are obsessed with every detail, every surface, every system. Good enough is never enough at LuxHaas.</p>
+      </div>
+      <div class="value-card reveal d1">
+        <div class="value-num">02</div>
+        <h3>Integrity</h3>
+        <p>We tell our clients the truth. About what's possible, what's ideal, and what we'd choose for ourselves.</p>
+      </div>
+      <div class="value-card reveal d2">
+        <div class="value-num">03</div>
+        <h3>Rarity</h3>
+        <p>We build few vehicles on purpose. Every client receives our full attention. We will never compromise this.</p>
+      </div>
+      <div class="value-card reveal d3">
+        <div class="value-num">04</div>
+        <h3>Legacy</h3>
+        <p>A LuxHaas vehicle is built to be passed down. We make heirlooms, not machines.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Timeline ── -->
+  <section class="timeline">
+    <div style="max-width:1200px; margin:0 auto;">
+      <div class="label reveal">Our Journey</div>
+      <h2 class="reveal d1">Six Years of<br><em>Excellence</em></h2>
+    </div>
+    <div class="timeline-inner">
+      <div class="timeline-item reveal">
+        <div class="timeline-year">2018</div>
+        <h3>LuxHaas is Founded</h3>
+        <p>Marcus Haas and Elena Lux establish LuxHaas Motors in San Antonio, TX. First vehicle delivered to a private collector in Dallas.</p>
+      </div>
+      <div class="timeline-item reveal d1">
+        <div class="timeline-year">2019</div>
+        <h3>The Obsidian Series Launches</h3>
+        <p>Our signature all-black conversion program debuts to critical acclaim. Waitlist grows to 18 months within 90 days.</p>
+      </div>
+      <div class="timeline-item reveal d2">
+        <div class="timeline-year">2020</div>
+        <h3>International Expansion</h3>
+        <p>First international deliveries to UAE, Switzerland, and the United Kingdom. LuxHaas enters the global stage.</p>
+      </div>
+      <div class="timeline-item reveal d3">
+        <div class="timeline-year">2021</div>
+        <h3>New Workshop — 42,000 sq ft</h3>
+        <p>Our purpose-built facility opens in Houston, TX. 40 master craftsmen. Full metal fabrication, paint, and upholstery in-house.</p>
+      </div>
+      <div class="timeline-item reveal d4">
+        <div class="timeline-year">2022</div>
+        <h3>500th Vehicle Delivered</h3>
+        <p>A milestone celebrated with the one-of-one LuxHaas Platinum Edition, gifted to our first client.</p>
+      </div>
+      <div class="timeline-item reveal">
+        <div class="timeline-year">2024</div>
+        <h3>The Future</h3>
+        <p>Exploring next-generation powertrain options, Level IV armor integration, and our first satellite showroom in Dubai.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Team ── -->
+  <section style="padding:8rem 3.5rem; background:var(--black); border-top:var(--border-gold);">
+    <div class="section-header">
+      <div class="label reveal">The People</div>
+      <h2 class="reveal d1">The Minds Behind<br><em>LuxHaas</em></h2>
+    </div>
+    <div class="team-grid">
+      <div class="team-card reveal">
+        <div class="team-avatar">MH</div>
+        <div class="team-name">Marcus Haas</div>
+        <div class="team-title">Co-Founder & CEO</div>
+        <p class="team-bio">Former US Army procurement officer. 12 years managing military vehicle acquisition programs. The man who knows every nut and bolt of every HMWWV variant ever produced.</p>
+      </div>
+      <div class="team-card reveal d1">
+        <div class="team-avatar">EL</div>
+        <div class="team-name">Elena Lux</div>
+        <div class="team-title">Co-Founder & Creative Director</div>
+        <p class="team-bio">Former lead designer at two of Europe's most storied luxury marques. Her vision transforms military precision into visceral aesthetic. Every LuxHaas you see, she designed.</p>
+      </div>
+      <div class="team-card reveal d2">
+        <div class="team-avatar">JR</div>
+        <div class="team-name">James Reeves</div>
+        <div class="team-title">Master Craftsman & Build Director</div>
+        <p class="team-bio">35 years in automotive restoration. Has personally overseen more than 200 HMWWV restorations. If it's perfect, James approved it. There are no exceptions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── The Promise ── -->
+  <section class="promise-section">
+    <div style="max-width:1200px; margin:0 auto;">
+      <div class="label reveal">Our Commitment</div>
+      <h2 class="reveal d1">The LuxHaas <em>Promise</em></h2>
+    </div>
+    <div class="promise-grid">
+      <div class="promise-item reveal">
+        <span class="promise-number">01</span>
+        <h3>Lifetime Relationship</h3>
+        <p>Your LuxHaas purchase is the beginning of a relationship, not a transaction. Our concierge team remains available to you, for life, for any need related to your vehicle.</p>
+      </div>
+      <div class="promise-item reveal d1">
+        <span class="promise-number">02</span>
+        <h3>Transparent Pricing</h3>
+        <p>No hidden fees. No dealer markup games. The price we quote is the price you pay. We believe honesty is the highest form of luxury.</p>
+      </div>
+      <div class="promise-item reveal d2">
+        <span class="promise-number">03</span>
+        <h3>Delivery Anywhere</h3>
+        <p>White glove delivery to your door, anywhere on earth. Our logistics team handles every detail, including registration in your jurisdiction.</p>
+      </div>
+      <div class="promise-item reveal d3">
+        <span class="promise-number">04</span>
+        <h3>The LuxHaas Standard</h3>
+        <p>Every vehicle is guaranteed against defects in craftsmanship for 3 years. No limits. No exclusions. We stand behind every vehicle we build.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-band">
+    <div class="label reveal">Join the Family</div>
+    <h2 class="reveal d1">Meet the Team<br><em>In Person</em></h2>
+    <p class="reveal d2">Visit our Houston facility for a private tour and consultation. See the craftsmanship firsthand. Meet the people who will build your vehicle.</p>
+    <div class="cta-actions reveal d3">
+      <a href="/contact" class="btn-gold">Book a Factory Visit</a>
+      <a href="/inventory" class="btn-text">View Collection →</a>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo-mark">LUXHAAS</div>
+        <span class="footer-logo-sub">Motors</span>
+        <p>The new standard in luxury tactical automotive excellence.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Vehicles</h4>
+          <a href="/inventory">Full Inventory</a>
+          <a href="/customize">Configure</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="/about">About LuxHaas</a>
+          <a href="/contact">Careers</a>
+        </div>
+        <div class="footer-col">
+          <h4>Connect</h4>
+          <a href="/contact">Contact Us</a>
+          <a href="#">Instagram</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span class="current-year">2024</span> LuxHaas Motors. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="#">Privacy</a><a href="#">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

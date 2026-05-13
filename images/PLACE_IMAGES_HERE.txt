@@ -1,0 +1,8 @@
+Save the three Humvee photos from the conversation with these exact filenames:
+
+  humvee-hero.jpg      → Parking lot front-3/4 shot  (used: Homepage hero banner)
+  humvee-product.jpg   → Garage/workshop side shot    (used: Homepage product highlight section)
+  humvee-lifestyle.jpg → Action/driving shot          (used: Homepage lifestyle showcase section)
+
+All three files must be placed in this /images/ folder.
+The inventory page also reuses humvee-hero.jpg and humvee-product.jpg for vehicle cards.

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — LuxHaas Motors</title>
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <meta name="description" content="Contact LuxHaas Motors. Schedule a private consultation or factory visit. Reach our team directly.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Override contact layout for full page feel */
+    .contact-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+    @media (max-width:1024px) {
+      .contact-wrapper { grid-template-columns: 1fr; }
+      .contact-left { padding: 8rem 2rem 4rem; }
+      .contact-right { padding: 4rem 2rem 6rem; }
+    }
+
+    .contact-left {
+      background: var(--gray-900);
+      padding: 12rem 5rem 6rem;
+      position: relative;
+      border-right: var(--border-gold);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .contact-left::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 5rem;
+      right: 5rem;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(201,168,76,0.3), transparent);
+    }
+
+    .contact-left h1 {
+      font-size: clamp(3rem,5vw,5rem);
+      margin-bottom: 1.5rem;
+    }
+    .contact-left > p {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.85;
+      max-width: 380px;
+      margin-bottom: 4rem;
+    }
+
+    .contact-detail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+    .cd-item {}
+    .cd-label {
+      display: block;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.45rem;
+    }
+    .cd-value {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+    }
+    .cd-value a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.25s;
+      cursor: none;
+    }
+    .cd-value a:hover { color: var(--gold); }
+
+    .contact-social {
+      display: flex;
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+    .social-link {
+      padding: 0.6rem 1.2rem;
+      border: var(--border-gold);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      transition: all 0.3s;
+      cursor: none;
+    }
+    .social-link:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* Decorative large text */
+    .contact-deco {
+      position: absolute;
+      bottom: 3rem; right: -2rem;
+      font-family: var(--font-display);
+      font-size: 10rem;
+      color: rgba(201,168,76,0.04);
+      letter-spacing: 0.1em;
+      pointer-events: none;
+      user-select: none;
+      line-height: 1;
+    }
+
+    .contact-right {
+      background: var(--black);
+      padding: 10rem 5rem 6rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .form-header {
+      margin-bottom: 3rem;
+    }
+    .form-header h2 {
+      font-size: clamp(2rem,3.5vw,3.2rem);
+      margin-bottom: 0.5rem;
+    }
+    .form-header p {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* Floating label inputs */
+    .fld {
+      position: relative;
+      margin-bottom: 2.5rem;
+    }
+    .fld label {
+      position: absolute;
+      top: 0.8rem; left: 0;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+    .fld input,
+    .fld select,
+    .fld textarea {
+      width: 100%;
+      background: none;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 0.85rem 0 0.85rem 0;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      color: var(--white);
+      outline: none;
+      transition: border-color 0.35s;
+    }
+    .fld select { -webkit-appearance: none; cursor: none; }
+    .fld select option { background: var(--gray-900); color: var(--white); }
+    .fld textarea { resize: none; height: 90px; }
+    .fld input::placeholder,
+    .fld textarea::placeholder { color: transparent; }
+    .fld input:focus,
+    .fld select:focus,
+    .fld textarea:focus { border-bottom-color: var(--gold); }
+    .fld input:focus + label,
+    .fld input:not(:placeholder-shown) + label,
+    .fld select:focus + label,
+    .fld select:not([value=""]) + label,
+    .fld textarea:focus + label,
+    .fld textarea:not(:placeholder-shown) + label {
+      top: -1.1rem;
+      font-size: 0.55rem;
+      color: var(--gold);
+    }
+    .fld-line {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 1px;
+      width: 0;
+      background: var(--gold);
+      transition: width 0.4s var(--ease-out);
+    }
+    .fld input:focus ~ .fld-line,
+    .fld textarea:focus ~ .fld-line { width: 100%; }
+
+    .fld-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+    }
+    @media (max-width:600px) { .fld-row { grid-template-columns:1fr; } }
+
+    .form-submit-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .form-note {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.2);
+      line-height: 1.6;
+      max-width: 220px;
+    }
+
+    /* Success state */
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 3rem;
+      border: var(--border-gold);
+    }
+    .form-success.show { display: block; }
+    .form-success h3 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--gold);
+    }
+    .form-success p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* Hours band */
+    .hours-band {
+      padding: 3rem 3.5rem;
+      background: var(--gray-900);
+      border-top: var(--border-gold);
+      display: flex;
+      justify-content: center;
+      gap: 6rem;
+      flex-wrap: wrap;
+    }
+    .hours-item { text-align: center; }
+    .hours-day {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.35rem;
+    }
+    .hours-time {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.55);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor"></div>
+  <div class="cursor-ring"></div>
+  <div class="page-intro" id="pageIntro"><span class="intro-logo">LUXHAAS</span></div>
+
+  <!-- Navigation -->
+  <nav class="nav scrolled" id="mainNav">
+    <a href="/" class="nav-logo">
+      <span class="logo-mark">LUXHAAS</span>
+      <span class="logo-sub">Motors</span>
+    </a>
+    <div class="nav-links">
+      <a href="/inventory">Inventory</a>
+      <a href="/customize">Configure</a>
+      <a href="/about">About</a>
+      <a href="/contact" class="active">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/contact" class="btn-gold">Schedule a Visit</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="/inventory">Inventory</a>
+    <a href="/customize">Configure</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+  </div>
+
+  <div style="margin-top:var(--nav-h);">
+    <div class="contact-wrapper">
+
+      <!-- Left — Info -->
+      <div class="contact-left">
+        <div class="label reveal">Get in Touch</div>
+        <h1 class="reveal d1">Let's Build<br><em>Something</em><br>Legendary.</h1>
+        <p class="reveal d2">Whether you're inquiring about a vehicle in our collection, commissioning a bespoke build, or simply want to see the workshop — our team is ready.</p>
+
+        <div class="contact-detail-list">
+          <div class="cd-item reveal d2">
+            <span class="cd-label">Headquarters</span>
+            <div class="cd-value">
+              1 LuxHaas Boulevard<br>
+              Houston, Texas 77001<br>
+              United States
+            </div>
+          </div>
+          <div class="cd-item reveal d3">
+            <span class="cd-label">Phone</span>
+            <div class="cd-value">
+              <a href="tel:+18005289427">+1 (800) LUX-HAAS</a><br>
+              <a href="tel:+17135289427">+1 (713) 528-9427</a>
+            </div>
+          </div>
+          <div class="cd-item reveal d4">
+            <span class="cd-label">Email</span>
+            <div class="cd-value">
+              <a href="mailto:hello@luxhaasmotors.com">hello@luxhaasmotors.com</a><br>
+              <a href="mailto:sales@luxhaasmotors.com">sales@luxhaasmotors.com</a>
+            </div>
+          </div>
+          <div class="cd-item reveal d5">
+            <span class="cd-label">International</span>
+            <div class="cd-value">
+              UAE: <a href="mailto:dubai@luxhaasmotors.com">dubai@luxhaasmotors.com</a><br>
+              EU: <a href="mailto:europe@luxhaasmotors.com">europe@luxhaasmotors.com</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-social reveal">
+          <a href="#" class="social-link">Instagram</a>
+          <a href="#" class="social-link">LinkedIn</a>
+          <a href="#" class="social-link">YouTube</a>
+        </div>
+
+        <div class="contact-deco">LH</div>
+      </div>
+
+      <!-- Right — Form -->
+      <div class="contact-right">
+        <div class="form-header">
+          <div class="label reveal">Private Consultation</div>
+          <h2 class="reveal d1">Send Us<br><em>a Message</em></h2>
+          <p class="reveal d2">We respond to all inquiries within 24 business hours. For urgent matters, please call us directly.</p>
+        </div>
+
+        <form id="contactForm" novalidate>
+
+          <div class="fld-row">
+            <div class="fld reveal">
+              <input type="text" id="fname" name="fname" placeholder="First Name" required autocomplete="given-name">
+              <label for="fname">First Name</label>
+              <div class="fld-line"></div>
+            </div>
+            <div class="fld reveal d1">
+              <input type="text" id="lname" name="lname" placeholder="Last Name" required autocomplete="family-name">
+              <label for="lname">Last Name</label>
+              <div class="fld-line"></div>
+            </div>
+          </div>
+
+          <div class="fld reveal">
+            <input type="email" id="email" name="email" placeholder="Email Address" required autocomplete="email">
+            <label for="email">Email Address</label>
+            <div class="fld-line"></div>
+          </div>
+
+          <div class="fld-row">
+            <div class="fld reveal">
+              <input type="tel" id="phone" name="phone" placeholder="Phone Number" autocomplete="tel">
+              <label for="phone">Phone Number</label>
+              <div class="fld-line"></div>
+            </div>
+            <div class="fld reveal d1">
+              <input type="text" id="country" name="country" placeholder="Country" autocomplete="country-name">
+              <label for="country">Country</label>
+              <div class="fld-line"></div>
+            </div>
+          </div>
+
+          <div class="fld reveal">
+            <select id="inquiry" name="inquiry" required>
+              <option value="" disabled selected></option>
+              <option value="inventory">Inquire About Inventory</option>
+              <option value="custom">Commission a Custom Build</option>
+              <option value="visit">Schedule a Factory Visit</option>
+              <option value="configure">Discuss a Configuration</option>
+              <option value="press">Press / Media</option>
+              <option value="other">Other</option>
+            </select>
+            <label for="inquiry">Nature of Inquiry</label>
+          </div>
+
+          <div class="fld reveal d1">
+            <textarea id="message" name="message" placeholder="Your message" rows="4"></textarea>
+            <label for="message">Your Message</label>
+            <div class="fld-line"></div>
+          </div>
+
+          <div class="form-submit-row reveal d2">
+            <button type="submit" class="btn-gold form-submit" id="formSubmit">
+              Send Message
+            </button>
+            <p class="form-note">Your information is held in strict confidence and never shared with third parties.</p>
+          </div>
+
+        </form>
+
+        <div class="form-success" id="formSuccess">
+          <h3>Message Received</h3>
+          <p>Thank you. A LuxHaas specialist will be in touch within 24 hours to arrange your private consultation. We look forward to building something extraordinary together.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Hours -->
+  <div class="hours-band">
+    <div class="hours-item">
+      <span class="hours-day">Monday — Friday</span>
+      <span class="hours-time">9:00 AM — 7:00 PM CT</span>
+    </div>
+    <div class="hours-item">
+      <span class="hours-day">Saturday</span>
+      <span class="hours-time">10:00 AM — 5:00 PM CT</span>
+    </div>
+    <div class="hours-item">
+      <span class="hours-day">Sunday</span>
+      <span class="hours-time">By Appointment Only</span>
+    </div>
+    <div class="hours-item">
+      <span class="hours-day">International Clients</span>
+      <span class="hours-time">24/7 Concierge Available</span>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo-mark">LUXHAAS</div>
+        <span class="footer-logo-sub">Motors</span>
+        <p>The new standard in luxury tactical automotive excellence.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Vehicles</h4>
+          <a href="/inventory">Full Inventory</a>
+          <a href="/customize">Configure</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="/about">About LuxHaas</a>
+          <a href="/contact">Careers</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span class="current-year">2024</span> LuxHaas Motors. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    'use strict';
+    const form = document.getElementById('contactForm');
+    const success = document.getElementById('formSuccess');
+    if (form) {
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        form.style.display = 'none';
+        success.classList.add('show');
+      });
+    }
+
+    // Float label for select
+    const sel = document.getElementById('inquiry');
+    if (sel) {
+      sel.addEventListener('change', () => {
+        if (sel.value) sel.setAttribute('value', sel.value);
+      });
+    }
+  </script>
+</body>
+</html>
