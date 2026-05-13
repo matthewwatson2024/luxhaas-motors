@@ -1,7 +1,7 @@
 {
-  "name": "luxhaas-motors",
+  "name": "luxhaus-motors",
   "version": "1.0.0",
-  "description": "LuxHaas Motors website server",
+  "description": "LuxHaus Motors website server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

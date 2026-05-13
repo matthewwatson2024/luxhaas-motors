@@ -28,5 +28,5 @@ app.get('/inventory', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`LuxHaas Motors server running at http://localhost:${port}`);
+  console.log(`LuxHaus Motors server running at http://localhost:${port}`);
 });
