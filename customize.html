@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Configure — LuxHaus Motors</title>
   <link rel="icon" type="image/x-icon" href="images/favicon.ico">
-  <meta name="description" content="Design your bespoke LuxHaus HMWWV. Choose color, roof, armor, and interior options with our 3D configurator.">
+  <meta name="description" content="Build your bespoke LuxHaus HMMWV. Configure body style, roof, engine, upgrades, and finish with our interactive 3D configurator.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -136,6 +136,155 @@
       letter-spacing: 0.04em;
       color: var(--gold);
     }
+
+    /* ── Category section title with icon ── */
+    .config-section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .sec-icon {
+      width: 13px; height: 13px;
+      color: rgba(201,168,76,0.55);
+      flex-shrink: 0;
+    }
+
+    /* ── Category divider ── */
+    .category-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.6rem 2rem 0.2rem;
+    }
+    .category-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, rgba(201,168,76,0.22), transparent);
+    }
+    .cat-div-label {
+      font-size: 0.42rem;
+      font-weight: 700;
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: rgba(201,168,76,0.45);
+      white-space: nowrap;
+    }
+
+    /* ── Toggle (multi-select) option buttons ── */
+    .option-btn.toggle-btn { position: relative; }
+    .option-btn.toggle-btn.active::after {
+      content: '✓';
+      position: absolute;
+      top: 0.45rem;
+      right: 0.55rem;
+      font-size: 0.5rem;
+      line-height: 1;
+      color: var(--gold);
+    }
+
+    /* ── Budget pill buttons ── */
+    .budget-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .budget-btn {
+      padding: 0.55rem 1rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: rgba(255,255,255,0.45);
+      font-family: inherit;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      cursor: none;
+      border-radius: 2px;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .budget-btn:hover {
+      border-color: rgba(201,168,76,0.35);
+      color: rgba(255,255,255,0.75);
+    }
+    .budget-btn.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.07);
+    }
+
+    /* ── Consultation request section ── */
+    .consult-section {
+      padding: 2rem;
+      border-top: 1px solid rgba(201,168,76,0.18);
+      background: rgba(201,168,76,0.025);
+    }
+    .consult-badge {
+      font-size: 0.42rem;
+      font-weight: 700;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.7rem;
+    }
+    .consult-section h3 {
+      font-family: var(--font-display);
+      font-size: 1.85rem;
+      letter-spacing: 0.05em;
+      color: var(--white);
+      margin: 0 0 0.65rem;
+      line-height: 1.1;
+    }
+    .consult-section > p {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.75;
+      margin-bottom: 1.4rem;
+    }
+    .consult-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 0.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .consult-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .consult-list li:last-child { border-bottom: none; padding-bottom: 0; }
+    .consult-num {
+      font-size: 0.5rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: rgba(201,168,76,0.55);
+      padding-top: 0.15rem;
+      flex-shrink: 0;
+      min-width: 1.5rem;
+    }
+    .consult-list strong {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 0.15rem;
+    }
+    .consult-list span {
+      font-size: 0.62rem;
+      color: rgba(255,255,255,0.28);
+      line-height: 1.55;
+    }
+    .consult-note {
+      font-size: 0.6rem;
+      color: rgba(255,255,255,0.2);
+      text-align: center;
+      margin-top: 1rem;
+      line-height: 1.75;
+      padding-bottom: 2rem;
+    }
   </style>
 </head>
 <body>
@@ -181,7 +330,7 @@
 
       <div class="viewer-topbar">
         <span class="vt-label">Interactive 3D Configurator</span>
-        <span class="vt-name">HMWWV — LuxHaus Edition</span>
+        <span class="vt-name">HMMWV — LuxHaus Edition</span>
       </div>
 
       <div class="axis-hint">
@@ -193,203 +342,407 @@
     <div class="config-pane">
       <div class="config-header">
         <div class="label">Configure Your</div>
-        <h2>LuxHaus<br><em>HMWWV</em></h2>
-        <p>Build your vehicle to exact specification. Every choice crafted in real-time.</p>
+        <h2>LuxHaus<br><em>HMMWV</em></h2>
+        <p>Build your bespoke HMMWV from the ground up. Every specification tailored to your mission.</p>
       </div>
 
-      <!-- Exterior Color -->
+      <!-- ── 01 — Exterior Color ───────────────────────── -->
       <div class="config-section">
-        <div class="config-section-title">01 — Exterior Color</div>
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <circle cx="8" cy="8" r="5.5"/>
+            <circle cx="8" cy="8" r="2"/>
+            <path d="M8 2.5v1M8 12.5v1M2.5 8h1M12.5 8h1"/>
+          </svg>
+          01 — Exterior Color
+        </div>
         <div class="swatch-grid">
           <div class="swatch-item">
             <div class="swatch-dot active" style="background:#C4A882;" data-color="#C4A882" data-price="0" data-name="Desert Sand" onclick="selectColor(this)"></div>
             <span class="swatch-name">Sand</span>
           </div>
           <div class="swatch-item">
-            <div class="swatch-dot" style="background:#111111;" data-color="#111111" data-price="3500" data-name="Obsidian Black" onclick="selectColor(this)"></div>
+            <div class="swatch-dot" style="background:#111111;" data-color="#111111" data-price="500" data-name="Obsidian Black" onclick="selectColor(this)"></div>
             <span class="swatch-name">Obsidian</span>
           </div>
           <div class="swatch-item">
-            <div class="swatch-dot" style="background:#E8E8E8; border:1px solid rgba(255,255,255,0.15);" data-color="#DCDCDC" data-price="3500" data-name="Arctic White" onclick="selectColor(this)"></div>
+            <div class="swatch-dot" style="background:#E8E8E8; border:1px solid rgba(255,255,255,0.15);" data-color="#DCDCDC" data-price="500" data-name="Arctic White" onclick="selectColor(this)"></div>
             <span class="swatch-name">Arctic</span>
           </div>
           <div class="swatch-item">
-            <div class="swatch-dot" style="background:#2D5A27;" data-color="#2D5A27" data-price="3500" data-name="Ranger Green" onclick="selectColor(this)"></div>
+            <div class="swatch-dot" style="background:#2D5A27;" data-color="#2D5A27" data-price="500" data-name="Ranger Green" onclick="selectColor(this)"></div>
             <span class="swatch-name">Ranger</span>
           </div>
           <div class="swatch-item">
-            <div class="swatch-dot" style="background:#CC0000;" data-color="#CC0000" data-price="4500" data-name="Hero Red" onclick="selectColor(this)"></div>
+            <div class="swatch-dot" style="background:#CC0000;" data-color="#CC0000" data-price="600" data-name="Hero Red" onclick="selectColor(this)"></div>
             <span class="swatch-name">Hero Red</span>
           </div>
           <div class="swatch-item">
-            <div class="swatch-dot" style="background:linear-gradient(135deg,#C9A84C,#8B6914); border:none;" data-color="#C9A84C" data-price="8000" data-name="LuxHaus Gold" onclick="selectColor(this)"></div>
+            <div class="swatch-dot" style="background:linear-gradient(135deg,#C9A84C,#8B6914); border:none;" data-color="#C9A84C" data-price="1200" data-name="LuxHaus Gold" onclick="selectColor(this)"></div>
             <span class="swatch-name">LH Gold</span>
           </div>
           <div class="swatch-item">
-            <div class="swatch-dot" style="background:linear-gradient(135deg,#7B7246 25%,#4B5E35 25% 50%,#2F3D1E 50% 75%,#3B2B14 75%); border:none;" data-color="CAMO" data-price="6500" data-name="Woodland Camo" onclick="selectColor(this)"></div>
+            <div class="swatch-dot" style="background:linear-gradient(135deg,#7B7246 25%,#4B5E35 25% 50%,#2F3D1E 50% 75%,#3B2B14 75%); border:none;" data-color="CAMO" data-price="900" data-name="Woodland Camo" onclick="selectColor(this)"></div>
             <span class="swatch-name">Camo</span>
           </div>
         </div>
       </div>
 
-      <!-- Roof Configuration -->
+      <!-- ══ CHASSIS & STRUCTURE ══════════════════════════ -->
+      <div class="category-divider">
+        <span class="cat-div-label">Chassis &amp; Structure</span>
+      </div>
+
+      <!-- ── 02 — Body Style ───────────────────────────── -->
       <div class="config-section">
-        <div class="config-section-title">02 — Roof Configuration</div>
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <rect x="1" y="8" width="14" height="4" rx="0.5"/>
+            <path d="M3 8l2-3h6l2 3"/>
+            <circle cx="4.5" cy="12.5" r="1"/>
+            <circle cx="11.5" cy="12.5" r="1"/>
+          </svg>
+          02 — Body Style
+        </div>
         <div class="option-grid">
-          <button class="option-btn active" data-group="roof" data-price="0" onclick="selectOption(this)">
-            Hard Top
+          <button class="option-btn active" data-group="body" data-price="0" onclick="selectOption(this)">
+            Four Door
+            <span class="opt-price">Standard</span>
+          </button>
+          <button class="option-btn" data-group="body" data-price="0" onclick="selectOption(this)">
+            Two Door
             <span class="opt-price">Included</span>
           </button>
-          <button class="option-btn" data-group="roof" data-price="2200" onclick="selectOption(this)">
+          <button class="option-btn" data-group="body" data-price="0" onclick="selectOption(this)">
+            Slant Back
+            <span class="opt-price">Included</span>
+          </button>
+          <button class="option-btn" data-group="body" data-price="0" onclick="selectOption(this)">
+            Square Back
+            <span class="opt-price">Included</span>
+          </button>
+          <button class="option-btn" data-group="body" data-price="0" onclick="selectOption(this)">
+            Open Bed
+            <span class="opt-price">Included</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── 03 — Window Configuration ────────────────── -->
+      <div class="config-section">
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <rect x="2" y="2" width="5" height="5" rx="0.4"/>
+            <rect x="9" y="2" width="5" height="5" rx="0.4"/>
+            <rect x="2" y="9" width="5" height="5" rx="0.4"/>
+            <rect x="9" y="9" width="5" height="5" rx="0.4"/>
+          </svg>
+          03 — Window Configuration
+        </div>
+        <div class="option-grid">
+          <button class="option-btn active" data-group="windows" data-price="0" onclick="selectOption(this)">
+            4 Door + Windows
+            <span class="opt-price">Standard</span>
+          </button>
+          <button class="option-btn" data-group="windows" data-price="0" onclick="selectOption(this)">
+            4 Door No Windows
+            <span class="opt-price">Included</span>
+          </button>
+          <button class="option-btn" data-group="windows" data-price="0" onclick="selectOption(this)">
+            2 Door + Windows
+            <span class="opt-price">Included</span>
+          </button>
+          <button class="option-btn" data-group="windows" data-price="0" onclick="selectOption(this)">
+            2 Door No Windows
+            <span class="opt-price">Included</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── 04 — Top / Roof Type ──────────────────────── -->
+      <div class="config-section">
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <path d="M2 12 Q2 4 8 3 Q14 4 14 12"/>
+            <line x1="2" y1="12" x2="14" y2="12"/>
+          </svg>
+          04 — Top / Roof Type
+        </div>
+        <div class="option-grid">
+          <button class="option-btn active" data-group="top" data-price="0" onclick="selectOption(this)">
+            Hardtop
+            <span class="opt-price">Included</span>
+          </button>
+          <button class="option-btn" data-group="top" data-price="800" onclick="selectOption(this)">
             Soft Top
+            <span class="opt-price">+$800</span>
+          </button>
+          <button class="option-btn" data-group="top" data-price="1100" onclick="selectOption(this)">
+            Slant Back Top
+            <span class="opt-price">+$1,100</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ POWERTRAIN ════════════════════════════════════ -->
+      <div class="category-divider">
+        <span class="cat-div-label">Powertrain</span>
+      </div>
+
+      <!-- ── 05 — Engine Option ────────────────────────── -->
+      <div class="config-section">
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <circle cx="8" cy="8" r="2.5"/>
+            <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.7 3.7l1.4 1.4M10.9 10.9l1.4 1.4M3.7 12.3l1.4-1.4M10.9 5.1l1.4-1.4"/>
+          </svg>
+          05 — Engine Option
+        </div>
+        <div class="option-grid">
+          <button class="option-btn active" data-group="engine" data-price="0" onclick="selectOption(this)">
+            Turbo Diesel
+            <span class="opt-price">Standard</span>
+          </button>
+          <button class="option-btn" data-group="engine" data-price="0" onclick="selectOption(this)">
+            Naturally Aspirated
+            <span class="opt-price">Included</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ UPGRADES & FEATURES ═══════════════════════════ -->
+      <div class="category-divider">
+        <span class="cat-div-label">Upgrades &amp; Features</span>
+      </div>
+
+      <!-- ── 06 — Comfort & Street Features ───────────── -->
+      <div class="config-section">
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <path d="M2 13V9a3 3 0 016 0v1.5"/>
+            <path d="M8 10.5H13.5a0.5 0.5 0 010 1H2"/>
+            <path d="M12 11.5V13"/>
+          </svg>
+          06 — Comfort &amp; Street Features
+        </div>
+        <p style="font-size:0.58rem;color:rgba(255,255,255,0.25);margin:0 0 0.9rem;line-height:1.6;">Select all that apply — multiple options can be added.</p>
+        <div class="option-grid">
+          <button class="option-btn toggle-btn" data-group="comfort" data-price="2200" onclick="toggleOption(this)">
+            Air Conditioning
             <span class="opt-price">+$2,200</span>
           </button>
-          <button class="option-btn" data-group="roof" data-price="5500" onclick="selectOption(this)">
-            Combat Open
-            <span class="opt-price">+$5,500</span>
+          <button class="option-btn toggle-btn" data-group="comfort" data-price="1600" onclick="toggleOption(this)">
+            Hard Doors
+            <span class="opt-price">+$1,600</span>
           </button>
-          <button class="option-btn" data-group="roof" data-price="7800" onclick="selectOption(this)">
-            Slant Back
-            <span class="opt-price">+$7,800</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Wheel Package -->
-      <div class="config-section">
-        <div class="config-section-title">03 — Wheel Package</div>
-        <div class="option-grid">
-          <button class="option-btn active" data-group="wheels" data-price="0" onclick="selectOption(this)">
-            Military Steel
-            <span class="opt-price">Included</span>
-          </button>
-          <button class="option-btn" data-group="wheels" data-price="4800" onclick="selectOption(this)">
-            LH Gold Billet
-            <span class="opt-price">+$4,800</span>
-          </button>
-          <button class="option-btn" data-group="wheels" data-price="3200" onclick="selectOption(this)">
-            Matte Black
+          <button class="option-btn toggle-btn" data-group="comfort" data-price="3200" onclick="toggleOption(this)">
+            Street Legal Pkg
             <span class="opt-price">+$3,200</span>
           </button>
-          <button class="option-btn" data-group="wheels" data-price="5500" onclick="selectOption(this)">
-            Bronze Forged
-            <span class="opt-price">+$5,500</span>
+        </div>
+      </div>
+
+      <!-- ── 07 — Exterior Upgrades ────────────────────── -->
+      <div class="config-section">
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <path d="M8 2L3 4.5v4C3 11.5 5.5 13.8 8 14.5c2.5-.7 5-3 5-6V4.5L8 2z"/>
+          </svg>
+          07 — Exterior Upgrades
+        </div>
+        <p style="font-size:0.58rem;color:rgba(255,255,255,0.25);margin:0 0 0.9rem;line-height:1.6;">Select all that apply — multiple options can be added.</p>
+        <div class="option-grid">
+          <button class="option-btn toggle-btn" data-group="exterior" data-price="600" onclick="toggleOption(this)">
+            Grill Guard
+            <span class="opt-price">+$600</span>
+          </button>
+          <button class="option-btn toggle-btn" data-group="exterior" data-price="800" onclick="toggleOption(this)">
+            Brush Guard
+            <span class="opt-price">+$800</span>
+          </button>
+          <button class="option-btn toggle-btn" data-group="exterior" data-price="1100" onclick="toggleOption(this)">
+            Light Kit
+            <span class="opt-price">+$1,100</span>
+          </button>
+          <button class="option-btn toggle-btn" data-group="exterior" data-price="2000" onclick="toggleOption(this)">
+            Turret Mount
+            <span class="opt-price">+$2,000</span>
+          </button>
+          <button class="option-btn toggle-btn" data-group="exterior" data-price="2400" onclick="toggleOption(this)">
+            Off-Road Tire Pkg
+            <span class="opt-price">+$2,400</span>
+          </button>
+          <button class="option-btn toggle-btn" data-group="exterior" data-price="1200" onclick="toggleOption(this)">
+            Accessories Pkg
+            <span class="opt-price">+$1,200</span>
           </button>
         </div>
       </div>
 
-      <!-- Armor Level -->
+      <!-- ══ BUILD DETAILS ═════════════════════════════════ -->
+      <div class="category-divider">
+        <span class="cat-div-label">Build Details</span>
+      </div>
+
+      <!-- ── 08 — Vehicle Condition ────────────────────── -->
       <div class="config-section">
-        <div class="config-section-title">04 — Protection Level</div>
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <path d="M8 2l1.6 3.4 3.7.5-2.65 2.6.62 3.7L8 10.5l-3.27 1.7.62-3.7L2.7 5.9l3.7-.5z"/>
+          </svg>
+          08 — Vehicle Condition
+        </div>
         <div class="option-grid">
-          <button class="option-btn active" data-group="armor" data-price="0" onclick="selectOption(this)">
-            Standard
+          <button class="option-btn active" data-group="condition" data-price="0" onclick="selectOption(this)">
+            Original Military
             <span class="opt-price">Included</span>
           </button>
-          <button class="option-btn" data-group="armor" data-price="18000" onclick="selectOption(this)">
-            Level III-A
-            <span class="opt-price">+$18,000</span>
+          <button class="option-btn" data-group="condition" data-price="3500" onclick="selectOption(this)">
+            Restored
+            <span class="opt-price">+$3,500</span>
           </button>
-          <button class="option-btn" data-group="armor" data-price="35000" onclick="selectOption(this)">
-            Level III
-            <span class="opt-price">+$35,000</span>
-          </button>
-          <button class="option-btn" data-group="armor" data-price="62000" onclick="selectOption(this)">
-            Level IV
-            <span class="opt-price">+$62,000</span>
+          <button class="option-btn" data-group="condition" data-price="7500" onclick="selectOption(this)">
+            Premium Refurbished
+            <span class="opt-price">+$7,500</span>
           </button>
         </div>
       </div>
 
-      <!-- Interior -->
+      <!-- ── 09 — Budget Range ──────────────────────────── -->
       <div class="config-section">
-        <div class="config-section-title">05 — Interior Package</div>
-        <div class="option-grid">
-          <button class="option-btn active" data-group="interior" data-price="0" onclick="selectOption(this)">
-            Military Standard
-            <span class="opt-price">Included</span>
-          </button>
-          <button class="option-btn" data-group="interior" data-price="12000" onclick="selectOption(this)">
-            Executive Suite
-            <span class="opt-price">+$12,000</span>
-          </button>
-          <button class="option-btn" data-group="interior" data-price="22000" onclick="selectOption(this)">
-            LuxHaus Elite
-            <span class="opt-price">+$22,000</span>
-          </button>
-          <button class="option-btn" data-group="interior" data-price="38000" onclick="selectOption(this)">
-            Head of State
-            <span class="opt-price">+$38,000</span>
-          </button>
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <path d="M8 2l4.5 5L8 14 3.5 7z"/>
+            <line x1="3.5" y1="7" x2="12.5" y2="7"/>
+          </svg>
+          09 — Budget Range
+        </div>
+        <p style="font-size:0.58rem;color:rgba(255,255,255,0.25);margin:0 0 0.9rem;line-height:1.6;">Your target investment — shared with your specialist.</p>
+        <div class="budget-grid">
+          <button class="budget-btn" onclick="selectBudget(this)">$15k – $20k</button>
+          <button class="budget-btn active" onclick="selectBudget(this)">$20k – $25k</button>
+          <button class="budget-btn" onclick="selectBudget(this)">$25k – $30k</button>
+          <button class="budget-btn" onclick="selectBudget(this)">$30k+</button>
         </div>
       </div>
 
-      <!-- Accessories -->
-      <div class="config-section">
-        <div class="config-section-title">06 — Accessories</div>
-        <div class="option-grid">
-          <button class="option-btn active" data-group="winch" data-price="0" onclick="selectOption(this)">
-            No Winch
-            <span class="opt-price">—</span>
-          </button>
-          <button class="option-btn" data-group="winch" data-price="4200" onclick="selectOption(this)">
-            Warn 16.5ti
-            <span class="opt-price">+$4,200</span>
-          </button>
-          <button class="option-btn active" data-group="light" data-price="0" onclick="selectOption(this)">
-            Stock Lighting
-            <span class="opt-price">—</span>
-          </button>
-          <button class="option-btn" data-group="light" data-price="2800" onclick="selectOption(this)">
-            Baja Designs
-            <span class="opt-price">+$2,800</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Summary -->
+      <!-- ── Build Summary ─────────────────────────────── -->
       <div class="config-section" style="border-bottom:none;">
-        <div class="config-section-title">Your Configuration</div>
+        <div class="config-section-title">
+          <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <rect x="2" y="2" width="12" height="12" rx="1"/>
+            <line x1="5" y1="5.5" x2="11" y2="5.5"/>
+            <line x1="5" y1="8" x2="11" y2="8"/>
+            <line x1="5" y1="10.5" x2="8.5" y2="10.5"/>
+          </svg>
+          Your Build Summary
+        </div>
+
         <div class="sum-line">
           <span class="sl">Base Vehicle</span>
-          <span class="sr">$165,000</span>
+          <span class="sr">$18,500</span>
         </div>
         <div class="sum-line" id="sumColor">
           <span class="sl">Color — Desert Sand</span>
           <span class="sr">Included</span>
         </div>
-        <div class="sum-line" id="sumRoof">
-          <span class="sl">Roof — Hard Top</span>
+        <div class="sum-line" id="sumBody">
+          <span class="sl">Body — Four Door</span>
           <span class="sr">Included</span>
         </div>
-        <div class="sum-line" id="sumWheels">
-          <span class="sl">Wheels — Military Steel</span>
+        <div class="sum-line" id="sumTop">
+          <span class="sl">Top — Hardtop</span>
           <span class="sr">Included</span>
         </div>
-        <div class="sum-line" id="sumArmor">
-          <span class="sl">Protection — Standard</span>
+        <div class="sum-line" id="sumEngine">
+          <span class="sl">Engine — Turbo Diesel</span>
           <span class="sr">Included</span>
         </div>
-        <div class="sum-line" id="sumInterior">
-          <span class="sl">Interior — Military Standard</span>
+        <div class="sum-line" id="sumComfort">
+          <span class="sl">Comfort — None selected</span>
+          <span class="sr">—</span>
+        </div>
+        <div class="sum-line" id="sumExterior">
+          <span class="sl">Upgrades — None selected</span>
+          <span class="sr">—</span>
+        </div>
+        <div class="sum-line" id="sumCondition">
+          <span class="sl">Condition — Original Military</span>
           <span class="sr">Included</span>
         </div>
 
         <div class="total-bar">
-          <span class="tl">Total Configuration</span>
-          <span class="tr" id="totalPrice">$165,000</span>
+          <span class="tl">Starting Estimate</span>
+          <span class="tr" id="totalPrice">$18,500</span>
         </div>
 
         <a href="/contact" class="btn-gold" style="width:100%; justify-content:center; margin-top:1.5rem; padding:1.2rem;">
-          Request This Configuration
+          Request This Build
         </a>
-        <p style="font-size:0.65rem; color:rgba(255,255,255,0.25); text-align:center; margin-top:1rem; line-height:1.6;">
-          A LuxHaus specialist will contact you within 24 hours to confirm your build and arrange a private consultation.
+        <p style="font-size:0.62rem; color:rgba(255,255,255,0.22); text-align:center; margin-top:0.9rem; line-height:1.7;">
+          Pricing is an estimate. Final cost confirmed during your private consultation.
         </p>
       </div>
 
-    </div>
-  </div>
+      <!-- ── Consultation Request ──────────────────────── -->
+      <div class="consult-section">
+        <div class="consult-badge">Next Step</div>
+        <h3>Book Your<br>Consultation</h3>
+        <p>Every LuxHaus HMMWV begins with a one-on-one specialist session. To make the most of your call, please prepare the following before we connect.</p>
+
+        <ul class="consult-list">
+          <li>
+            <span class="consult-num">01</span>
+            <div>
+              <strong>Reference Images</strong>
+              <span>Photos or inspiration for your ideal HMMWV build — the closer the better.</span>
+            </div>
+          </li>
+          <li>
+            <span class="consult-num">02</span>
+            <div>
+              <strong>Preferred Body Style</strong>
+              <span>4-door, 2-door, slant back, square back, or open bed configuration.</span>
+            </div>
+          </li>
+          <li>
+            <span class="consult-num">03</span>
+            <div>
+              <strong>Roof &amp; Top Style</strong>
+              <span>Hard top, soft top, or slant-back canopy preference.</span>
+            </div>
+          </li>
+          <li>
+            <span class="consult-num">04</span>
+            <div>
+              <strong>Engine Preference</strong>
+              <span>Turbo diesel or naturally aspirated — we source both.</span>
+            </div>
+          </li>
+          <li>
+            <span class="consult-num">05</span>
+            <div>
+              <strong>Desired Upgrades</strong>
+              <span>Comfort features, exterior protection packages, and accessories.</span>
+            </div>
+          </li>
+          <li>
+            <span class="consult-num">06</span>
+            <div>
+              <strong>Budget Range</strong>
+              <span>Your all-in investment target for the complete build.</span>
+            </div>
+          </li>
+        </ul>
+
+        <a href="/contact" class="btn-gold" style="width:100%; justify-content:center; margin-top:1.75rem; padding:1.2rem;">
+          Book Consultation with LuxHaus
+        </a>
+        <p class="consult-note">A LuxHaus specialist will contact you within 24 hours to confirm availability and arrange your private build consultation.</p>
+      </div>
+
+    </div><!-- /config-pane -->
+  </div><!-- /customize-layout -->
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
@@ -399,49 +752,107 @@
   <script>
     'use strict';
 
+    /* ── State ─────────────────────────────────────────────────────
+       Single-select groups store { price, label }.
+       Multi-select groups (comfort, exterior) store arrays of same.
+       Budget is a preference label only — not added to the total.   */
     const state = {
-      base: 165000,
-      color: { price: 0, label: 'Desert Sand' },
-      roof: { price: 0, label: 'Hard Top' },
-      wheels: { price: 0, label: 'Military Steel' },
-      armor: { price: 0, label: 'Standard' },
-      interior: { price: 0, label: 'Military Standard' },
-      winch: { price: 0, label: '' },
-      light: { price: 0, label: '' },
+      base:      18500,
+      color:     { price: 0,    label: 'Desert Sand'       },
+      body:      { price: 0,    label: 'Four Door'          },
+      windows:   { price: 0,    label: '4 Door + Windows'   },
+      top:       { price: 0,    label: 'Hardtop'            },
+      engine:    { price: 0,    label: 'Turbo Diesel'       },
+      comfort:   [],
+      exterior:  [],
+      condition: { price: 0,    label: 'Original Military'  },
+      budget:    { label: '$20k – $25k' },
     };
 
-    function fmt(n) {
+    /* ── Helpers ───────────────────────────────────────────────── */
+    function multiTotal(arr)  { return arr.reduce((s, i) => s + i.price, 0); }
+
+    function fmtMulti(arr) {
+      if (!arr.length)       return 'None selected';
+      if (arr.length === 1)  return arr[0].label;
+      return arr.length + ' selected';
+    }
+
+    function fmtPrice(n) {
       return n === 0 ? 'Included' : '+$' + n.toLocaleString();
     }
 
+    function setRow(id, prefix, label, price) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.querySelector('.sl').textContent = prefix + ' — ' + label;
+      el.querySelector('.sr').textContent = fmtPrice(price);
+    }
+
+    /* ── Summary updater ───────────────────────────────────────── */
     function updateSummary() {
-      const total = state.base + state.color.price + state.roof.price +
-                    state.wheels.price + state.armor.price + state.interior.price +
-                    state.winch.price + state.light.price;
+      const total = state.base
+        + state.color.price
+        + state.top.price
+        + state.condition.price
+        + multiTotal(state.comfort)
+        + multiTotal(state.exterior);
 
       document.getElementById('totalPrice').textContent = '$' + total.toLocaleString();
 
-      const sc = document.getElementById('sumColor');
-      sc.querySelector('.sl').textContent = 'Color — ' + state.color.label;
-      sc.querySelector('.sr').textContent = fmt(state.color.price);
+      setRow('sumColor',    'Color',     state.color.label,     state.color.price);
+      setRow('sumBody',     'Body',      state.body.label,      0);
+      setRow('sumTop',      'Top',       state.top.label,       state.top.price);
+      setRow('sumEngine',   'Engine',    state.engine.label,    0);
+      setRow('sumCondition','Condition', state.condition.label, state.condition.price);
 
-      const sr = document.getElementById('sumRoof');
-      sr.querySelector('.sl').textContent = 'Roof — ' + state.roof.label;
-      sr.querySelector('.sr').textContent = fmt(state.roof.price);
+      const cEl = document.getElementById('sumComfort');
+      if (cEl) {
+        const cp = multiTotal(state.comfort);
+        cEl.querySelector('.sl').textContent = 'Comfort — ' + fmtMulti(state.comfort);
+        cEl.querySelector('.sr').textContent = cp === 0 ? '—' : '+$' + cp.toLocaleString();
+      }
 
-      const sw = document.getElementById('sumWheels');
-      sw.querySelector('.sl').textContent = 'Wheels — ' + state.wheels.label;
-      sw.querySelector('.sr').textContent = fmt(state.wheels.price);
-
-      const sa = document.getElementById('sumArmor');
-      sa.querySelector('.sl').textContent = 'Protection — ' + state.armor.label;
-      sa.querySelector('.sr').textContent = fmt(state.armor.price);
-
-      const si = document.getElementById('sumInterior');
-      si.querySelector('.sl').textContent = 'Interior — ' + state.interior.label;
-      si.querySelector('.sr').textContent = fmt(state.interior.price);
+      const eEl = document.getElementById('sumExterior');
+      if (eEl) {
+        const ep = multiTotal(state.exterior);
+        eEl.querySelector('.sl').textContent = 'Upgrades — ' + fmtMulti(state.exterior);
+        eEl.querySelector('.sr').textContent = ep === 0 ? '—' : '+$' + ep.toLocaleString();
+      }
     }
 
+    /* ── Selection handlers ────────────────────────────────────── */
+
+    // Single-select (radio): clears group, sets one active
+    window.selectOption = function(btn) {
+      const group = btn.dataset.group;
+      document.querySelectorAll(`.option-btn[data-group="${group}"]`)
+        .forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state[group] = {
+        price: parseInt(btn.dataset.price || 0),
+        label: btn.firstChild.textContent.trim(),
+      };
+      updateSummary();
+    };
+
+    // Multi-select (toggle): flips individual button without clearing others
+    window.toggleOption = function(btn) {
+      const group = btn.dataset.group;
+      const price = parseInt(btn.dataset.price || 0);
+      const label = btn.firstChild.textContent.trim();
+
+      btn.classList.toggle('active');
+
+      if (btn.classList.contains('active')) {
+        state[group].push({ price, label });
+      } else {
+        state[group] = state[group].filter(i => i.label !== label);
+      }
+      updateSummary();
+    };
+
+    // Color swatch: drives Three.js body material
     window.selectColor = function(dot) {
       document.querySelectorAll('.swatch-dot').forEach(d => d.classList.remove('active'));
       dot.classList.add('active');
@@ -451,14 +862,11 @@
       updateSummary();
     };
 
-    window.selectOption = function(btn) {
-      const group = btn.dataset.group;
-      document.querySelectorAll(`.option-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+    // Budget range: preference indicator, not included in price total
+    window.selectBudget = function(btn) {
+      document.querySelectorAll('.budget-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const price = parseInt(btn.dataset.price || 0);
-      const label = btn.firstChild.textContent.trim();
-      state[group] = { price, label };
-      updateSummary();
+      state.budget.label = btn.textContent.trim();
     };
   </script>
 </body>

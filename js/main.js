@@ -310,7 +310,6 @@ function initConfigScene() {
 
   const scene  = new THREE.Scene();
   scene.background = new THREE.Color(0x080808);
-  scene.fog        = new THREE.FogExp2(0x080808, 0.035);
 
   const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 200);
   camera.position.set(6, 2.8, 6);
@@ -368,6 +367,54 @@ function initConfigScene() {
   const bounceLight = new THREE.PointLight(0xFFEDD0, 0.7, 10);
   bounceLight.position.set(0, -0.5, 0);
   scene.add(bounceLight);
+
+  /* ── Magical floating particle orbs ───────────────────────────
+     Two nested sphere clouds — outer drifts slowly, inner faster.
+     AdditiveBlending + depthWrite:false means they glow without
+     occluding the vehicle or each other.
+     Rejection sampling gives uniform volumetric distribution
+     (pure spherical coords would cluster near the poles). */
+  const pCloud1 = (function() {
+    const S   = 64;
+    const cvs = document.createElement('canvas');
+    cvs.width = cvs.height = S;
+    const ctx = cvs.getContext('2d');
+    const g = ctx.createRadialGradient(S/2, S/2, 0, S/2, S/2, S/2);
+    g.addColorStop(0.00, 'rgba(255, 235, 145, 1.00)');
+    g.addColorStop(0.20, 'rgba(230, 185,  65, 0.80)');
+    g.addColorStop(0.55, 'rgba(190, 140,  25, 0.25)');
+    g.addColorStop(1.00, 'rgba(160, 110,   5, 0.00)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, S, S);
+    const sprite = new THREE.CanvasTexture(cvs);
+
+    function sphereCloud(count, radius, ptSize, opacity) {
+      const pos = new Float32Array(count * 3);
+      let i = 0;
+      while (i < count) {
+        const x = (Math.random() * 2 - 1) * radius;
+        const y = (Math.random() * 2 - 1) * radius;
+        const z = (Math.random() * 2 - 1) * radius;
+        if (x*x + y*y + z*z > radius * radius) continue;
+        pos[i*3] = x; pos[i*3+1] = y; pos[i*3+2] = z;
+        i++;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const mat = new THREE.PointsMaterial({
+        size: ptSize, map: sprite, color: 0xD4A830,
+        transparent: true, opacity,
+        alphaTest: 0.001, sizeAttenuation: true,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      });
+      return new THREE.Points(geo, mat);
+    }
+
+    const c1 = sphereCloud(150, 20, 0.065, 0.36);
+    const c2 = sphereCloud( 80, 11, 0.038, 0.28);
+    scene.add(c1, c2);
+    return { c1, c2 };
+  })();
 
   /* Texture loader + texture map */
   const TX = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_Textures/';
@@ -573,6 +620,13 @@ function initConfigScene() {
 
     group.rotation.y = rotY;
     group.rotation.x = rotX;
+
+    pCloud1.c1.rotation.y =  t * 0.007;
+    pCloud1.c1.rotation.x =  t * 0.003;
+    pCloud1.c1.material.opacity = 0.34 + Math.sin(t * 0.65) * 0.07;
+    pCloud1.c2.rotation.y = -t * 0.005;
+    pCloud1.c2.rotation.z =  t * 0.004;
+    pCloud1.c2.material.opacity = 0.26 + Math.sin(t * 0.85 + 1.3) * 0.06;
 
     renderer.render(scene, camera);
   })();
