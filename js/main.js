@@ -325,18 +325,6 @@ function initConfigScene() {
   renderer.toneMapping         = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
 
-  /* Ground */
-  const groundGeo = new THREE.PlaneGeometry(40, 40);
-  const groundMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.4, metalness: 0.6 });
-  const ground    = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x  = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
-
-  const gridHelper = new THREE.GridHelper(24, 32, 0xC9A84C, 0x1a1a1a);
-  gridHelper.material.transparent = true;
-  gridHelper.material.opacity = 0.15;
-  scene.add(gridHelper);
 
   /* ── Lighting rig ─────────────────────────────────────────────────
      3-point studio setup tuned for PBR + ACES tone mapping.
