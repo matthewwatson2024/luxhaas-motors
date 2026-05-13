@@ -310,192 +310,272 @@ function initConfigScene() {
 
   const scene  = new THREE.Scene();
   scene.background = new THREE.Color(0x080808);
-  scene.fog        = new THREE.FogExp2(0x080808, 0.04);
+  scene.fog        = new THREE.FogExp2(0x080808, 0.035);
 
-  const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-  camera.position.set(7, 3.5, 7);
-  camera.lookAt(0, 0.5, 0);
+  const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 200);
+  camera.position.set(6, 2.8, 6);
+  camera.lookAt(0, 0.8, 0);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(canvas.clientWidth, canvas.clientHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.shadowMap.enabled  = true;
-  renderer.shadowMap.type     = THREE.PCFSoftShadowMap;
-
-  /* Vehicle Material */
-  const bodyColor = 0xC4A882;
-  const bodyMat   = new THREE.MeshStandardMaterial({ color: bodyColor, metalness: 0.2, roughness: 0.65 });
-  const glassMat  = new THREE.MeshStandardMaterial({ color: 0x223344, metalness: 0.1, roughness: 0.1, transparent: true, opacity: 0.45 });
-  const trimMat   = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7, roughness: 0.35 });
-  const rimMat    = new THREE.MeshStandardMaterial({ color: 0xC9A84C, metalness: 0.95, roughness: 0.05 });
-  const tireMat   = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.0, roughness: 0.9 });
-
-  const group = new THREE.Group();
-
-  /* --- Body --- */
-  const bodyGeo = new THREE.BoxGeometry(4.4, 1.3, 2.2);
-  const body    = new THREE.Mesh(bodyGeo, bodyMat);
-  body.position.y = 0.85;
-  body.castShadow = true;
-  group.add(body);
-
-  /* --- Roof / Cab --- */
-  const roofGeo = new THREE.BoxGeometry(2.9, 0.95, 2.0);
-  const roof    = new THREE.Mesh(roofGeo, bodyMat);
-  roof.position.set(0.1, 1.97, 0);
-  roof.castShadow = true;
-  group.add(roof);
-
-  /* --- Hood --- */
-  const hoodGeo = new THREE.BoxGeometry(1.4, 0.5, 2.2);
-  const hood    = new THREE.Mesh(hoodGeo, bodyMat);
-  hood.position.set(-2.2, 0.55, 0);
-  hood.castShadow = true;
-  group.add(hood);
-
-  /* --- Windshield --- */
-  const wsGeo = new THREE.BoxGeometry(0.08, 0.72, 1.8);
-  const ws    = new THREE.Mesh(wsGeo, glassMat);
-  ws.position.set(-1.38, 1.72, 0);
-  ws.rotation.z = -0.25;
-  group.add(ws);
-
-  /* --- Rear window --- */
-  const rwGeo = new THREE.BoxGeometry(0.08, 0.72, 1.85);
-  const rw    = new THREE.Mesh(rwGeo, glassMat);
-  rw.position.set(1.4, 1.72, 0);
-  rw.rotation.z = 0.18;
-  group.add(rw);
-
-  /* --- Side windows (4) --- */
-  [-0.3, 0.65].forEach(xPos => {
-    const swGeo = new THREE.BoxGeometry(0.65, 0.52, 0.07);
-    [-0.97, 0.97].forEach(z => {
-      const sw = new THREE.Mesh(swGeo, glassMat);
-      sw.position.set(xPos, 1.82, z);
-      group.add(sw);
-    });
-  });
-
-  /* --- Front bumper --- */
-  const fbGeo = new THREE.BoxGeometry(0.18, 0.55, 2.0);
-  const fb    = new THREE.Mesh(fbGeo, trimMat);
-  fb.position.set(-3.0, 0.5, 0);
-  group.add(fb);
-
-  /* --- Grille --- */
-  const grGeo = new THREE.BoxGeometry(0.08, 0.75, 1.75);
-  const gr    = new THREE.Mesh(grGeo, trimMat);
-  gr.position.set(-2.94, 0.72, 0);
-  group.add(gr);
-
-  /* --- Headlights --- */
-  const hlGeo = new THREE.BoxGeometry(0.15, 0.22, 0.38);
-  const hlMat = new THREE.MeshStandardMaterial({ color: 0xffffee, emissive: 0xffffcc, emissiveIntensity: 0.6 });
-  [0.75, -0.75].forEach(z => {
-    const hl = new THREE.Mesh(hlGeo, hlMat);
-    hl.position.set(-2.93, 0.82, z);
-    group.add(hl);
-  });
-
-  /* --- Taillights --- */
-  const tlGeo = new THREE.BoxGeometry(0.12, 0.22, 0.35);
-  const tlMat = new THREE.MeshStandardMaterial({ color: 0xff2200, emissive: 0xff1100, emissiveIntensity: 0.5 });
-  [0.78, -0.78].forEach(z => {
-    const tl = new THREE.Mesh(tlGeo, tlMat);
-    tl.position.set(2.93, 0.82, z);
-    group.add(tl);
-  });
-
-  /* --- Wheels (4) --- */
-  const wheelPositions = [
-    [-1.5, 0, 1.2], [-1.5, 0, -1.2],
-    [ 1.5, 0, 1.2], [ 1.5, 0, -1.2],
-  ];
-  const tireGeo = new THREE.CylinderGeometry(0.56, 0.56, 0.42, 28);
-  const rimGeo  = new THREE.CylinderGeometry(0.32, 0.32, 0.46, 16);
-  const hubGeo  = new THREE.CylinderGeometry(0.1,  0.1,  0.5,  8);
-
-  wheelPositions.forEach(([x, , z]) => {
-    const tire = new THREE.Mesh(tireGeo, tireMat);
-    const rim  = new THREE.Mesh(rimGeo,  rimMat);
-    const hub  = new THREE.Mesh(hubGeo,  trimMat);
-    [tire, rim, hub].forEach(m => {
-      m.rotation.z = Math.PI / 2;
-      m.position.set(x, 0.56, z);
-      m.castShadow = true;
-      group.add(m);
-    });
-  });
-
-  /* --- Spare tire (rear) --- */
-  const spGeo  = new THREE.TorusGeometry(0.44, 0.12, 12, 28);
-  const spare  = new THREE.Mesh(spGeo, tireMat);
-  spare.position.set(2.85, 1.1, 0);
-  spare.rotation.y = Math.PI / 2;
-  group.add(spare);
-
-  /* --- Antenna --- */
-  const antGeo = new THREE.CylinderGeometry(0.012, 0.012, 1.0, 6);
-  const ant    = new THREE.Mesh(antGeo, trimMat);
-  ant.position.set(0.5, 2.52, 0.9);
-  group.add(ant);
-
-  scene.add(group);
-  group.position.y = 0.12;
+  renderer.shadowMap.enabled   = true;
+  renderer.shadowMap.type      = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding      = THREE.sRGBEncoding;
+  renderer.toneMapping         = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
 
   /* Ground */
-  const groundGeo = new THREE.PlaneGeometry(30, 30);
+  const groundGeo = new THREE.PlaneGeometry(40, 40);
   const groundMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.4, metalness: 0.6 });
   const ground    = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
+  ground.rotation.x  = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
 
-  /* Grid lines on ground */
-  const gridHelper = new THREE.GridHelper(20, 30, 0xC9A84C, 0x1a1a1a);
+  const gridHelper = new THREE.GridHelper(24, 32, 0xC9A84C, 0x1a1a1a);
   gridHelper.material.transparent = true;
   gridHelper.material.opacity = 0.15;
   scene.add(gridHelper);
 
-  /* Lights */
-  scene.add(new THREE.AmbientLight(0x222222, 1));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
-  keyLight.position.set(5, 10, 5);
-  keyLight.castShadow = true;
-  keyLight.shadow.mapSize.set(2048, 2048);
-  scene.add(keyLight);
-  const fillLight = new THREE.PointLight(0xffeedd, 1.5, 18);
-  fillLight.position.set(-6, 3, -4);
-  scene.add(fillLight);
-  const rimLight = new THREE.PointLight(0xC9A84C, 3, 15);
-  rimLight.position.set(0, 2, -7);
-  scene.add(rimLight);
-  const underLight = new THREE.PointLight(0xC9A84C, 0.8, 6);
-  underLight.position.set(0, -0.4, 0);
-  scene.add(underLight);
+  /* ── Lighting rig ─────────────────────────────────────────────────
+     3-point studio setup tuned for PBR + ACES tone mapping.
 
-  /* Orbit controls (manual) */
+     · Hemisphere  — sky (cool blue) / ground (warm brown) gradient;
+                     replaces flat AmbientLight so no surface is fully black
+                     but shadow contrast is preserved.
+     · Key         — primary light, front-right-high, slightly warm white;
+                     defines the main highlight and casts soft shadows.
+     · Fill        — opposite side (left-rear), cool blue-white, ~¼ key power;
+                     lifts shadow faces without washing them out.
+     · Rim         — directly behind the vehicle, cool neutral;
+                     separates silhouette edges from the dark background.
+     · Bounce      — low-intensity warm point near the ground plane;
+                     simulates light bouncing back up into the undercarriage.
+  ────────────────────────────────────────────────────────────────── */
+  const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, 0.55);
+  scene.add(hemi);
+
+  const keyLight = new THREE.DirectionalLight(0xFFF5E0, 2.2);
+  keyLight.position.set(6, 12, 4);
+  keyLight.castShadow              = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.near      = 1;
+  keyLight.shadow.camera.far       = 50;
+  keyLight.shadow.camera.left      = -8;
+  keyLight.shadow.camera.right     =  8;
+  keyLight.shadow.camera.top       =  8;
+  keyLight.shadow.camera.bottom    = -8;
+  keyLight.shadow.bias             = -0.0004;
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0xCBDFF5, 0.55);
+  fillLight.position.set(-8, 5, -6);
+  scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xDEECF8, 1.0);
+  rimLight.position.set(0, 4, -10);
+  scene.add(rimLight);
+
+  const bounceLight = new THREE.PointLight(0xFFEDD0, 0.7, 10);
+  bounceLight.position.set(0, -0.5, 0);
+  scene.add(bounceLight);
+
+  /* Texture loader + texture map */
+  const TX = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_Textures/';
+  const txLoader = new THREE.TextureLoader();
+  function loadTex(name, sRGB) {
+    const t = txLoader.load(TX + name);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    if (sRGB) t.encoding = THREE.sRGBEncoding;
+    return t;
+  }
+
+  const bodyColorTex  = loadTex('Body_Color.jpg',        true);
+  const bodyNormTex   = loadTex('Body_Normal.jpg',        false);
+  const bodyRoughTex  = loadTex('Body_Metallic.jpg',      false);
+  const wheelColorTex = loadTex('Wheels_Color.jpg',       true);
+  const wheelNormTex  = loadTex('Wheels_Normal.jpg',      false);
+  const wheelRoughTex = loadTex('Wheels_Roughness.jpg',   false);
+  const suspColorTex  = loadTex('Suspensions_Color.jpg',  true);
+  const suspNormTex   = loadTex('Suspensions_Normal.jpg', false);
+  const suspMetalTex  = loadTex('Suspensions_Metallic.jpg', false);
+  const glassColorTex = loadTex('Glass_color.jpg',        true);
+  const lightsColorTex= loadTex('lights_color.jpg',       true);
+  const plateColorTex = loadTex('Nameplates_color.jpg',   true);
+  const plateOpacTex  = loadTex('Nameplates_opacity.jpg', false);
+
+  /* Body PBR material — referenced externally for color swaps */
+  const bodyMat = new THREE.MeshStandardMaterial({
+    map:          bodyColorTex,
+    normalMap:    bodyNormTex,
+    roughnessMap: bodyRoughTex,
+    metalness:    0.22,
+    roughness:    0.65,
+  });
+
+  const wheelMat = new THREE.MeshStandardMaterial({
+    map:          wheelColorTex,
+    normalMap:    wheelNormTex,
+    roughnessMap: wheelRoughTex,
+    metalness:    0.3,
+    roughness:    0.7,
+  });
+
+  const suspMat = new THREE.MeshStandardMaterial({
+    map:          suspColorTex,
+    normalMap:    suspNormTex,
+    roughnessMap: suspMetalTex,
+    metalness:    0.5,
+    roughness:    0.55,
+  });
+
+  const glassMat = new THREE.MeshStandardMaterial({
+    map:         glassColorTex,
+    metalness:   0.05,
+    roughness:   0.08,
+    transparent: true,
+    opacity:     0.52,
+  });
+
+  const lightsMat = new THREE.MeshStandardMaterial({
+    map:              lightsColorTex,
+    emissiveMap:      lightsColorTex,
+    emissive:         new THREE.Color(0xffffff),
+    emissiveIntensity:0.35,
+    metalness:        0.15,
+    roughness:        0.12,
+  });
+
+  const plateMat = new THREE.MeshStandardMaterial({
+    map:         plateColorTex,
+    alphaMap:    plateOpacTex,
+    transparent: true,
+    metalness:   0.75,
+    roughness:   0.25,
+  });
+
+  /* Map OBJ group names → materials */
+  function materialForGroup(name) {
+    if (name.includes('Body'))        return bodyMat;
+    if (name.includes('Wheel'))       return wheelMat;
+    if (name.includes('Suspension'))  return suspMat;
+    if (name.includes('Glass'))       return glassMat;
+    if (name.includes('Light'))       return lightsMat;
+    if (name.includes('Nameplate'))   return plateMat;
+    return bodyMat;
+  }
+
+  /* Rotation group */
+  const group = new THREE.Group();
+  scene.add(group);
+
+  /* Loading indicator overlay */
+  const loadOverlay = document.createElement('div');
+  Object.assign(loadOverlay.style, {
+    position: 'absolute', inset: '0', display: 'flex',
+    alignItems: 'center', justifyContent: 'center',
+    pointerEvents: 'none', zIndex: '5',
+  });
+  loadOverlay.innerHTML = '<span style="font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.3)">Loading Model…</span>';
+  canvas.parentElement.style.position = 'relative';
+  canvas.parentElement.appendChild(loadOverlay);
+
+  /* Load OBJ with MTL */
+  const mtlLoader = new THREE.MTLLoader();
+  const OBJ_PATH  = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_OBJ/';
+  mtlLoader.setPath(OBJ_PATH);
+  mtlLoader.load('HMMWV_Desert_OBJ.mtl', function(mtlMats) {
+    mtlMats.preload();
+    const objLoader = new THREE.OBJLoader();
+    objLoader.setMaterials(mtlMats);
+    objLoader.setPath(OBJ_PATH);
+    objLoader.load('HMMWV_Desert_OBJ.obj', function(object) {
+
+      /* Apply PBR textures per named group.
+         OBJLoader sets the group name on the Mesh itself (child.name),
+         not on its parent container — using parent.name always returns ''
+         and would assign bodyMat to every part. */
+      object.traverse(function(child) {
+        if (!child.isMesh) return;
+        child.castShadow    = true;
+        child.receiveShadow = true;
+        child.material = materialForGroup(child.name);
+      });
+
+      /* Auto-center and scale to fit nicely in scene */
+      const box = new THREE.Box3().setFromObject(object);
+      const size = box.getSize(new THREE.Vector3());
+      const scale = 5.5 / Math.max(size.x, size.y, size.z);
+      object.scale.setScalar(scale);
+
+      /* After scaling recompute box to ground the model */
+      const box2   = new THREE.Box3().setFromObject(object);
+      const center2 = box2.getCenter(new THREE.Vector3());
+      object.position.x = -center2.x;
+      object.position.z = -center2.z;
+      object.position.y = -box2.min.y;
+
+      group.add(object);
+      loadOverlay.remove();
+
+    }, undefined, function(err) {
+      console.error('HMMWV OBJ load error:', err);
+      loadOverlay.querySelector('span').textContent = 'Model unavailable';
+    });
+  }, undefined, function(err) {
+    console.warn('MTL load failed, loading OBJ without materials:', err);
+    const objLoader = new THREE.OBJLoader();
+    objLoader.setPath(OBJ_PATH);
+    objLoader.load('HMMWV_Desert_OBJ.obj', function(object) {
+      object.traverse(function(child) {
+        if (!child.isMesh) return;
+        child.castShadow    = true;
+        child.receiveShadow = true;
+        child.material = materialForGroup(child.name);
+      });
+      const box = new THREE.Box3().setFromObject(object);
+      const size = box.getSize(new THREE.Vector3());
+      const scale = 5.5 / Math.max(size.x, size.y, size.z);
+      object.scale.setScalar(scale);
+      const box2    = new THREE.Box3().setFromObject(object);
+      const center2 = box2.getCenter(new THREE.Vector3());
+      object.position.x = -center2.x;
+      object.position.z = -center2.z;
+      object.position.y = -box2.min.y;
+      group.add(object);
+      loadOverlay.remove();
+    });
+  });
+
+  /* Drag-to-rotate controls */
   let isDragging = false, prevX = 0, prevY = 0;
-  let rotY = 0.4, rotX = 0.15;
+  let rotY = 0.4, rotX = 0.1;
 
   canvas.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
-  window.addEventListener('mouseup',   ()  => { isDragging = false; });
+  window.addEventListener('mouseup',   () => { isDragging = false; });
   window.addEventListener('mousemove', e => {
     if (!isDragging) return;
     rotY += (e.clientX - prevX) * 0.008;
     rotX += (e.clientY - prevY) * 0.004;
-    rotX  = Math.max(-0.4, Math.min(0.55, rotX));
+    rotX  = Math.max(-0.35, Math.min(0.5, rotX));
     prevX = e.clientX; prevY = e.clientY;
   });
 
-  canvas.addEventListener('touchstart', e => { isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY; });
-  window.addEventListener('touchend',   ()  => { isDragging = false; });
-  window.addEventListener('touchmove',  e => {
+  canvas.addEventListener('touchstart', e => {
+    isDragging = true;
+    prevX = e.touches[0].clientX;
+    prevY = e.touches[0].clientY;
+  }, { passive: true });
+  window.addEventListener('touchend', () => { isDragging = false; });
+  window.addEventListener('touchmove', e => {
     if (!isDragging) return;
     rotY += (e.touches[0].clientX - prevX) * 0.008;
+    rotX += (e.touches[0].clientY - prevY) * 0.004;
+    rotX  = Math.max(-0.35, Math.min(0.5, rotX));
     prevX = e.touches[0].clientX;
-  });
+    prevY = e.touches[0].clientY;
+  }, { passive: true });
 
   const clock = new THREE.Clock();
   (function frame() {
@@ -506,15 +586,83 @@ function initConfigScene() {
     group.rotation.y = rotY;
     group.rotation.x = rotX;
 
-    rimLight.position.x = Math.sin(t * 0.5) * 7;
-    rimLight.position.z = Math.cos(t * 0.5) * 7 - 7;
-
     renderer.render(scene, camera);
   })();
 
-  /* Expose color changer globally */
-  window.setVehicleColor = function(hex) {
-    bodyMat.color.set(hex);
+  /* ── Procedural camo canvas texture ───────────────────────────
+     Generates a woodland camouflage pattern using a deterministic
+     LCG so the result is identical every call. Returns a
+     THREE.CanvasTexture ready to assign to bodyMat.map. */
+  function createCamoTexture() {
+    const S   = 512;
+    const cvs = document.createElement('canvas');
+    cvs.width = cvs.height = S;
+    const ctx = cvs.getContext('2d');
+
+    let seed = 0x3AF7C2;
+    function rng() {
+      seed = (Math.imul(seed, 1664525) + 1013904223) | 0;
+      return (seed >>> 0) / 0x100000000;
+    }
+
+    // Woodland palette: sandy tan base, olive, dark forest green, bark brown
+    const palette = ['#7B7246', '#4B5E35', '#2F3D1E', '#3B2B14'];
+    ctx.fillStyle = palette[0];
+    ctx.fillRect(0, 0, S, S);
+
+    for (let i = 0; i < 110; i++) {
+      const bx  = rng() * S;
+      const by  = rng() * S;
+      const br  = 24 + rng() * 68;
+      const col = palette[1 + Math.floor(rng() * 3)];
+      const pts = 7 + Math.floor(rng() * 5);
+
+      ctx.beginPath();
+      for (let j = 0; j < pts; j++) {
+        const a0 = (j       / pts) * Math.PI * 2;
+        const a1 = ((j + 1) / pts) * Math.PI * 2;
+        const rr = br * (0.6 + rng() * 0.8);
+        const nr = br * (0.6 + rng() * 0.8);
+        const ca = (a0 + a1) * 0.5 + (rng() - 0.5) * 0.5;
+        const cr = br * (0.9 + rng() * 0.7);
+        if (j === 0) ctx.moveTo(bx + rr * Math.cos(a0), by + rr * Math.sin(a0));
+        ctx.quadraticCurveTo(
+          bx + cr * Math.cos(ca), by + cr * Math.sin(ca),
+          bx + nr * Math.cos(a1), by + nr * Math.sin(a1)
+        );
+      }
+      ctx.closePath();
+      ctx.fillStyle = col;
+      ctx.fill();
+    }
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.wrapS    = tex.wrapT = THREE.RepeatWrapping;
+    tex.encoding = THREE.sRGBEncoding;
+    return tex;
+  }
+
+  /* ── Color mode registry ───────────────────────────────────────
+     Keys match data-color values from the HTML swatches (compared
+     case-insensitively). Two kinds:
+       'texture' — assign the provided map; color tint stays white
+       'solid'   — no map; hex is applied directly as solid paint
+     To add a new finish, register one entry here only. */
+  const COLOR_MODES = {
+    '#C4A882': { kind: 'texture', map: bodyColorTex          },
+    'CAMO':    { kind: 'texture', map: createCamoTexture()   },
+  };
+
+  window.setVehicleColor = function(raw) {
+    const mode = COLOR_MODES[raw.toUpperCase()] || COLOR_MODES[raw] || { kind: 'solid' };
+    if (mode.kind === 'texture') {
+      bodyMat.map = mode.map;
+      bodyMat.color.set(0xffffff);
+    } else {
+      bodyMat.map = null;
+      bodyMat.color.set(raw);
+    }
+    bodyMat.needsUpdate = true;
   };
 
   new ResizeObserver(() => {
