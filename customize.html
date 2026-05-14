@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Configure — LuxHaus Motors</title>
+  <title>Configure Your Build — LuxHaus Motors</title>
   <link rel="icon" type="image/x-icon" href="images/favicon.ico">
-  <meta name="description" content="Build your bespoke LuxHaus HMMWV. Configure body style, roof, engine, upgrades, and finish with our interactive 3D configurator.">
+  <meta name="description" content="Build your bespoke LuxHaus M1165A1 HMMWV. Configure body style, roof, engine, upgrades, and finish with our interactive 3D configurator.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -288,6 +288,32 @@
 
     .opt-price { display: none; }
     .sum-line .sr { display: none; }
+
+    @media (max-width: 1024px) {
+      .viewer-pane   { height: 55vw; min-height: 320px; max-height: 500px; }
+      .config-pane   { height: auto; max-height: none; }
+    }
+    @media (max-width: 768px) {
+      .viewer-topbar { padding: 1rem 1.25rem; }
+      .viewer-topbar .vt-label { font-size: 0.52rem; letter-spacing: 0.22em; }
+      .viewer-topbar .vt-name  { font-size: 0.58rem; letter-spacing: 0.12em; }
+      .axis-hint span          { font-size: 0.5rem; }
+      .consult-section         { padding: 1.75rem 1.5rem; }
+      .consult-section h3      { font-size: 1.65rem; }
+      .budget-grid             { gap: 0.4rem; }
+      .budget-btn              { font-size: 0.6rem; padding: 0.5rem 0.85rem; }
+    }
+    @media (max-width: 480px) {
+      .viewer-topbar { padding: 0.75rem 1rem; }
+      .viewer-topbar .vt-name { display: none; }
+      .swatch-dot    { width: 32px; height: 32px; }
+      .swatch-grid   { gap: 0.75rem; }
+      .consult-section { padding: 1.5rem 1.25rem; }
+      .consult-section h3 { font-size: 1.45rem; }
+      .consult-list li { gap: 0.65rem; }
+      .total-bar .tr { font-size: 2.2rem; }
+      .option-grid   { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -302,8 +328,7 @@
       <span class="logo-sub">Motors</span>
     </a>
     <div class="nav-links">
-      <a href="/inventory">Inventory</a>
-      <a href="/customize" class="active">Configure</a>
+      <a href="/configure-your-build" class="active">Configure Your Build</a>
       <a href="/about">About</a>
       <a href="/contact">Contact</a>
     </div>
@@ -316,8 +341,7 @@
   </nav>
 
   <div class="mobile-menu" id="mobileMenu">
-    <a href="/inventory">Inventory</a>
-    <a href="/customize">Configure</a>
+    <a href="/configure-your-build">Configure Your Build</a>
     <a href="/about">About</a>
     <a href="/contact">Contact</a>
   </div>
@@ -333,7 +357,7 @@
 
       <div class="viewer-topbar">
         <span class="vt-label">Interactive 3D Configurator</span>
-        <span class="vt-name">HMMWV — LuxHaus Edition</span>
+        <span class="vt-name">M1165A1 HMMWV — LuxHaus Edition</span>
       </div>
 
       <div class="axis-hint">
@@ -345,8 +369,8 @@
     <div class="config-pane">
       <div class="config-header">
         <div class="label">Configure Your</div>
-        <h2>LuxHaus<br><em>HMMWV</em></h2>
-        <p>Build your bespoke HMMWV from the ground up. Every specification tailored to your mission.</p>
+        <h2>LuxHaus<br><em>M1165A1 HMMWV</em></h2>
+        <p>Build your bespoke M1165A1 HMMWV from the ground up. Every specification tailored to your mission.</p>
       </div>
 
       <!-- ── 01 — Exterior Color ───────────────────────── -->
@@ -416,18 +440,6 @@
             Two Door
             <span class="opt-price">Included</span>
           </button>
-          <button class="option-btn" data-group="body" data-price="0" onclick="selectOption(this)">
-            Slant Back
-            <span class="opt-price">Included</span>
-          </button>
-          <button class="option-btn" data-group="body" data-price="0" onclick="selectOption(this)">
-            Square Back
-            <span class="opt-price">Included</span>
-          </button>
-          <button class="option-btn" data-group="body" data-price="0" onclick="selectOption(this)">
-            Open Bed
-            <span class="opt-price">Included</span>
-          </button>
         </div>
       </div>
 
@@ -459,6 +471,14 @@
             2 Door No Windows
             <span class="opt-price">Included</span>
           </button>
+          <button class="option-btn" data-group="windows" data-price="0" onclick="selectOption(this)">
+            Windshield
+            <span class="opt-price">Included</span>
+          </button>
+          <button class="option-btn" data-group="windows" data-price="0" onclick="selectOption(this)">
+            X-Type Doors with Fiberglass Windows
+            <span class="opt-price">Included</span>
+          </button>
         </div>
       </div>
 
@@ -483,6 +503,14 @@
           <button class="option-btn" data-group="top" data-price="1100" onclick="selectOption(this)">
             Slant Back Top
             <span class="opt-price">+$1,100</span>
+          </button>
+          <button class="option-btn" data-group="top" data-price="0" onclick="selectOption(this)">
+            No Top
+            <span class="opt-price">Included</span>
+          </button>
+          <button class="option-btn" data-group="top" data-price="0" onclick="selectOption(this)">
+            Open Bed
+            <span class="opt-price">Included</span>
           </button>
         </div>
       </div>
@@ -695,14 +723,14 @@
       <div class="consult-section">
         <div class="consult-badge">Next Step</div>
         <h3>Book Your<br>Consultation</h3>
-        <p>Every LuxHaus HMMWV begins with a one-on-one specialist session. To make the most of your call, please prepare the following before we connect.</p>
+        <p>Every LuxHaus M1165A1 HMMWV begins with a one-on-one specialist session. To make the most of your call, please prepare the following before we connect.</p>
 
         <ul class="consult-list">
           <li>
             <span class="consult-num">01</span>
             <div>
               <strong>Reference Images</strong>
-              <span>Photos or inspiration for your ideal HMMWV build — the closer the better.</span>
+              <span>Photos or inspiration for your ideal M1165A1 HMMWV build — the closer the better.</span>
             </div>
           </li>
           <li>

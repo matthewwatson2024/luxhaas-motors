@@ -230,6 +230,25 @@
       color: rgba(255,255,255,0.5);
     }
 
+    /* Error state */
+    .form-error {
+      display: none;
+      padding: 0.9rem 1.1rem;
+      border: 1px solid rgba(200,60,60,0.45);
+      background: rgba(200,60,60,0.06);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: rgba(255,110,110,0.85);
+      line-height: 1.65;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Field error highlight */
+    .fld-error { border-bottom-color: rgba(200,60,60,0.7) !important; }
+
+    /* Submit loading state */
+    .btn-gold:disabled { opacity: 0.55; cursor: not-allowed; }
+
     /* Hours band */
     .hours-band {
       padding: 3rem 3.5rem;
@@ -254,6 +273,29 @@
       font-size: 0.88rem;
       color: rgba(255,255,255,0.55);
     }
+
+    @media (max-width: 1024px) {
+      .contact-left  { padding: 8rem 3rem 4rem; }
+      .contact-right { padding: 6rem 3rem 4rem; }
+    }
+    @media (max-width: 768px) {
+      .contact-left  { padding: 6rem 1.5rem 3.5rem; }
+      .contact-right { padding: 4rem 1.5rem 4rem; }
+      .contact-deco  { display: none; }
+      .hours-band    { gap: 2.5rem; padding: 2.5rem 1.5rem; }
+      .hours-item    { min-width: calc(50% - 1.5rem); }
+      .form-submit-row { flex-direction: column; align-items: stretch; }
+      .form-submit-row .btn-gold { width: 100%; justify-content: center; }
+      .form-note { max-width: 100%; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .contact-left  { padding: 5rem 1.25rem 3rem; }
+      .contact-right { padding: 3rem 1.25rem 3rem; }
+      .hours-band    { flex-direction: column; align-items: center; gap: 2rem; padding: 2rem 1.25rem; }
+      .hours-item    { min-width: unset; width: 100%; }
+      .fld-row       { grid-template-columns: 1fr; gap: 0; }
+      .contact-social { flex-wrap: wrap; gap: 0.75rem; }
+    }
   </style>
 </head>
 <body>
@@ -269,8 +311,7 @@
       <span class="logo-sub">Motors</span>
     </a>
     <div class="nav-links">
-      <a href="/inventory">Inventory</a>
-      <a href="/customize">Configure</a>
+      <a href="/configure-your-build">Configure Your Build</a>
       <a href="/about">About</a>
       <a href="/contact" class="active">Contact</a>
     </div>
@@ -283,8 +324,7 @@
   </nav>
 
   <div class="mobile-menu" id="mobileMenu">
-    <a href="/inventory">Inventory</a>
-    <a href="/customize">Configure</a>
+    <a href="/configure-your-build">Configure Your Build</a>
     <a href="/about">About</a>
     <a href="/contact">Contact</a>
   </div>
@@ -300,18 +340,9 @@
 
         <div class="contact-detail-list">
           <div class="cd-item reveal d2">
-            <span class="cd-label">Headquarters</span>
-            <div class="cd-value">
-              1 LuxHaus Boulevard<br>
-              Houston, Texas 77001<br>
-              United States
-            </div>
-          </div>
-          <div class="cd-item reveal d3">
             <span class="cd-label">Phone</span>
             <div class="cd-value">
-              <a href="tel:+18005284287">+1 (800) LUX-HAUS</a><br>
-              <a href="tel:+17135284287">+1 (713) 528-4287</a>
+              <a href="tel:+15128061751">(512) 806-1751</a>
             </div>
           </div>
           <div class="cd-item reveal d4">
@@ -384,7 +415,6 @@
           <div class="fld reveal">
             <select id="inquiry" name="inquiry" required>
               <option value="" disabled selected></option>
-              <option value="inventory">Inquire About Inventory</option>
               <option value="custom">Commission a Custom Build</option>
               <option value="visit">Schedule a Factory Visit</option>
               <option value="configure">Discuss a Configuration</option>
@@ -399,6 +429,8 @@
             <label for="message">Your Message</label>
             <div class="fld-line"></div>
           </div>
+
+          <div class="form-error" id="formError"></div>
 
           <div class="form-submit-row reveal d2">
             <button type="submit" class="btn-gold form-submit" id="formSubmit">
@@ -448,8 +480,7 @@
       <div class="footer-links">
         <div class="footer-col">
           <h4>Vehicles</h4>
-          <a href="/inventory">Full Inventory</a>
-          <a href="/customize">Configure</a>
+          <a href="/configure-your-build">Configure</a>
         </div>
         <div class="footer-col">
           <h4>Company</h4>
@@ -476,22 +507,88 @@
   <script src="js/main.js"></script>
   <script>
     'use strict';
-    const form = document.getElementById('contactForm');
-    const success = document.getElementById('formSuccess');
+
+    const form      = document.getElementById('contactForm');
+    const success   = document.getElementById('formSuccess');
+    const errorEl   = document.getElementById('formError');
+    const submitBtn = document.getElementById('formSubmit');
+    const sel       = document.getElementById('inquiry');
+
+    // Float label for select
+    if (sel) {
+      sel.addEventListener('change', () => sel.setAttribute('value', sel.value || ''));
+    }
+
     if (form) {
-      form.addEventListener('submit', e => {
+      // Remove error highlight as user corrects a field
+      form.querySelectorAll('input, select, textarea').forEach(field => {
+        field.addEventListener('input',  () => field.classList.remove('fld-error'));
+        field.addEventListener('change', () => field.classList.remove('fld-error'));
+      });
+
+      form.addEventListener('submit', async e => {
         e.preventDefault();
-        form.style.display = 'none';
-        success.classList.add('show');
+        errorEl.style.display = 'none';
+
+        const fname   = form.fname.value.trim();
+        const lname   = form.lname.value.trim();
+        const email   = form.email.value.trim();
+        const phone   = form.phone.value.trim();
+        const country = form.country.value.trim();
+        const inquiry = sel.value;
+        const message = form.message.value.trim();
+
+        // ── Client-side validation ──────────────────────────────
+        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        let valid = true;
+
+        const mark = (el, ok) => { el.classList.toggle('fld-error', !ok); if (!ok) valid = false; };
+
+        mark(form.fname, !!fname);
+        mark(form.lname, !!lname);
+        mark(form.email, !!email && emailRe.test(email));
+        mark(sel,        !!inquiry);
+
+        if (!valid) {
+          showError('Please complete all required fields correctly.');
+          return;
+        }
+
+        // ── Submit ──────────────────────────────────────────────
+        submitBtn.disabled    = true;
+        submitBtn.textContent = 'Sending…';
+
+        try {
+          const resp = await fetch('/api/contact', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ fname, lname, email, phone, country, inquiry, message }),
+          });
+
+          const data = await resp.json();
+
+          if (data.success) {
+            form.style.display = 'none';
+            success.classList.add('show');
+          } else {
+            showError(data.error || 'Something went wrong. Please try again.');
+            resetBtn();
+          }
+        } catch {
+          showError('Unable to connect. Please try again or reach us directly by phone or email.');
+          resetBtn();
+        }
       });
     }
 
-    // Float label for select
-    const sel = document.getElementById('inquiry');
-    if (sel) {
-      sel.addEventListener('change', () => {
-        if (sel.value) sel.setAttribute('value', sel.value);
-      });
+    function showError(msg) {
+      errorEl.textContent  = msg;
+      errorEl.style.display = 'block';
+    }
+
+    function resetBtn() {
+      submitBtn.disabled    = false;
+      submitBtn.textContent = 'Send Message';
     }
   </script>
 </body>

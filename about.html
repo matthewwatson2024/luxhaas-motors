@@ -40,8 +40,12 @@
       color: rgba(255,255,255,0.35);
     }
     @media (max-width:768px) {
-      .about-numbers { grid-template-columns: repeat(2,1fr); }
-      .about-hero { padding: 10rem 1.5rem 5rem; }
+      .about-numbers  { grid-template-columns: repeat(2,1fr); }
+      .about-hero     { padding: 10rem 1.5rem 5rem; }
+      .about-num-item { padding: 2rem 1.25rem; }
+    }
+    @media (max-width:480px) {
+      .about-num-value { font-size: 3rem; }
     }
 
     .team-grid {
@@ -52,7 +56,8 @@
       max-width: 1200px;
       margin: 4rem auto 0;
     }
-    @media (max-width:768px) { .team-grid { grid-template-columns:1fr; } }
+    @media (max-width:1024px) { .team-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width:768px)  { .team-grid { grid-template-columns: 1fr; } }
     .team-card {
       background: var(--gray-900);
       padding: 3rem 2.5rem;
@@ -102,8 +107,9 @@
       grid-template-columns: 1fr 1fr;
       gap: 3rem;
     }
-    @media (max-width:768px) {
-      .promise-grid { grid-template-columns: 1fr; }
+    @media (max-width:1024px) { .promise-section { padding: 6rem 2.5rem; } }
+    @media (max-width:768px)  {
+      .promise-grid    { grid-template-columns: 1fr; }
       .promise-section { padding: 5rem 1.5rem; }
     }
     .promise-item {
@@ -152,8 +158,7 @@
       <span class="logo-sub">Motors</span>
     </a>
     <div class="nav-links">
-      <a href="/inventory">Inventory</a>
-      <a href="/customize">Configure</a>
+      <a href="/configure-your-build">Configure Your Build</a>
       <a href="/about" class="active">About</a>
       <a href="/contact">Contact</a>
     </div>
@@ -166,8 +171,7 @@
   </nav>
 
   <div class="mobile-menu" id="mobileMenu">
-    <a href="/inventory">Inventory</a>
-    <a href="/customize">Configure</a>
+    <a href="/configure-your-build">Configure Your Build</a>
     <a href="/about">About</a>
     <a href="/contact">Contact</a>
   </div>
@@ -176,7 +180,7 @@
   <section class="about-hero">
     <div class="label reveal">Our Story</div>
     <h1 class="reveal d1">The House<br>That <em>Precision</em><br>Built.</h1>
-    <p class="reveal d2">LuxHaus Motors was founded on a singular, unwavering conviction: that the most capable vehicles on earth deserve the most exceptional treatment. We are the world's foremost luxury HMWWV dealer — and we are entirely obsessed.</p>
+    <p class="reveal d2">LuxHaus Motors was founded on a singular, unwavering conviction: that the most capable vehicles on earth deserve the most exceptional treatment. We are the world's foremost luxury M1165A1 HMMWV dealer — and we are entirely obsessed.</p>
   </section>
 
   <!-- ── Numbers ── -->
@@ -207,7 +211,7 @@
     <div class="about-text-pane">
       <div class="label reveal">The Beginning</div>
       <h2 class="reveal d1">Born from<br><em>Obsession</em></h2>
-      <p class="reveal d2">LuxHaus was founded in 2018 by former military procurement officer Marcus Haus and automotive designer Elena Lux, who shared one conviction: the HMWWV — High Mobility Multipurpose Wheeled Vehicle — was the most capable, most iconic, and most under-appreciated vehicle ever built.</p>
+      <p class="reveal d2">LuxHaus was founded in 2018 by former military procurement officer Marcus Haus and automotive designer Elena Lux, who shared one conviction: the M1165A1 HMMWV — High Mobility Multipurpose Wheeled Vehicle — was the most capable, most iconic, and most under-appreciated vehicle ever built.</p>
       <p class="reveal d3">What began as a passion project in a Texas warehouse has grown into the world's most recognized name in luxury tactical vehicles. We don't just sell Humvees. We curate, restore, reimagine, and deliver rolling legends — each one a collaboration between our craftsmen and the client's singular vision.</p>
     </div>
   </div>
@@ -306,7 +310,7 @@
         <div class="team-avatar">MH</div>
         <div class="team-name">Marcus Haus</div>
         <div class="team-title">Co-Founder & CEO</div>
-        <p class="team-bio">Former US Army procurement officer. 12 years managing military vehicle acquisition programs. The man who knows every nut and bolt of every HMWWV variant ever produced.</p>
+        <p class="team-bio">Former US Army procurement officer. 12 years managing military vehicle acquisition programs. The man who knows every nut and bolt of every M1165A1 HMMWV variant ever produced.</p>
       </div>
       <div class="team-card reveal d1">
         <div class="team-avatar">EL</div>
@@ -318,7 +322,7 @@
         <div class="team-avatar">JR</div>
         <div class="team-name">James Reeves</div>
         <div class="team-title">Master Craftsman & Build Director</div>
-        <p class="team-bio">35 years in automotive restoration. Has personally overseen more than 200 HMWWV restorations. If it's perfect, James approved it. There are no exceptions.</p>
+        <p class="team-bio">35 years in automotive restoration. Has personally overseen more than 200 M1165A1 HMMWV restorations. If it's perfect, James approved it. There are no exceptions.</p>
       </div>
     </div>
   </section>
@@ -360,7 +364,7 @@
     <p class="reveal d2">Visit our Houston facility for a private tour and consultation. See the craftsmanship firsthand. Meet the people who will build your vehicle.</p>
     <div class="cta-actions reveal d3">
       <a href="/contact" class="btn-gold">Book a Factory Visit</a>
-      <a href="/inventory" class="btn-text">View Collection →</a>
+      <a href="/configure-your-build" class="btn-text">Configure Yours →</a>
     </div>
   </section>
 
@@ -374,8 +378,7 @@
       <div class="footer-links">
         <div class="footer-col">
           <h4>Vehicles</h4>
-          <a href="/inventory">Full Inventory</a>
-          <a href="/customize">Configure</a>
+          <a href="/configure-your-build">Configure</a>
         </div>
         <div class="footer-col">
           <h4>Company</h4>
