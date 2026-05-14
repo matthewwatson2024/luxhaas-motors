@@ -805,29 +805,29 @@
     };
 
     /* ── Variant folder map ────────────────────────────────────────
-       Key: `${doors}-${hasDoors}-${top}`
-       Values must match folder names exactly (all lowercase, spaces).  */
+       Key: `${doors}-${top}` — matches folder names under /models/variants/.
+       Windows configuration (glass on/off) is handled separately via
+       setGlassVisible() — it does not require a different geometry file. */
     const VARIANT_MAP = {
-      '4-true-hard':    '4 door, hard top',
-      '4-true-soft':    '4 door slant back soft top',
-      '4-true-slant':   '4 door, hard top, slant back',
-      '4-true-notop':   '4 door, no doors, no top',
-      '4-true-openbed': '4 door, no doors, no top',
-      '4-false-hard':   '4 door, hard top',
-      '4-false-soft':   '4 door, no doors, soft top',
-      '4-false-slant':  '4 door, no doors, slant back',
-      '4-false-notop':  '4 door, no doors, no top',
-      '4-false-openbed':'4 door, no doors, no top',
-      '2-true-hard':    '2 door, hard top',
-      '2-true-soft':    '2 door, no doors, soft top',
-      '2-true-slant':   '2 door, no doors, slant back',
-      '2-true-notop':   '2 door, no doors, no top',
-      '2-true-openbed': '2 door, no doors, no top',
-      '2-false-hard':   '2 door, no doors, hard top',
-      '2-false-soft':   '2 door, no doors, soft top',
-      '2-false-slant':  '2 door, no doors, slant back',
-      '2-false-notop':  '2 door, no doors, no top',
-      '2-false-openbed':'2 door, no doors, no top',
+      '4-hard':    '4door-hardtop',
+      '4-soft':    '4door-softtop',
+      '4-slant':   '4door-slantback',
+      '4-notop':   '4door-notop',
+      '4-openbed': '4door-openbed',
+      '2-hard':    '2door-hardtop',
+      '2-soft':    '2door-softtop',
+      '2-slant':   '2door-slantback',
+      '2-notop':   '2door-notop',
+    };
+
+    /* Maps exterior accessory labels to /models/accessories/<name>/ folders. */
+    const ACCESSORY_FOLDER = {
+      'Grill Guard':       'grillguard',
+      'Brush Guard':       'brushguard',
+      'Light Kit':         'lightkit',
+      'Turret Mount':      'turret',
+      'Off-Road Tire Pkg': 'offroadtires',
+      'Accessories Pkg':   'accessoriespkg',
     };
 
     /* ── Helpers ───────────────────────────────────────────────── */
@@ -884,19 +884,7 @@
 
     /* ── Variant key + model swap ─────────────────────────────── */
     function computeVariantKey() {
-      const wl = state.windows.label;
-      const bl = state.body.label;
-      const tl = state.top.label;
-
-      // Door count: windows label encodes it when it starts with "N Door"
-      let doors;
-      if      (wl.startsWith('4 Door') || wl.startsWith('4 door')) doors = '4';
-      else if (wl.startsWith('2 Door') || wl.startsWith('2 door')) doors = '2';
-      else doors = bl === 'Two Door' ? '2' : '4'; // Windshield / X-Type fallback
-
-      // hasDoors: false when "No Windows" or bare Windshield
-      const hasDoors = !(wl.includes('No Windows') || wl === 'Windshield');
-
+      const doors = state.body.label === 'Two Door' ? '2' : '4';
       const topMap = {
         'Hardtop':        'hard',
         'Soft Top':       'soft',
@@ -904,15 +892,17 @@
         'No Top':         'notop',
         'Open Bed':       'openbed',
       };
-      const top = topMap[tl] || 'hard';
-
-      return `${doors}-${hasDoors}-${top}`;
+      return `${doors}-${topMap[state.top.label] || 'hard'}`;
     }
 
     function updateModelVariant() {
       if (typeof window.swapVariantModel !== 'function') return;
       const folder = VARIANT_MAP[computeVariantKey()] || null;
       window.swapVariantModel(folder);
+      // Glass: hidden only for explicit "No Windows" selections
+      if (typeof window.setGlassVisible === 'function') {
+        window.setGlassVisible(!state.windows.label.includes('No Windows'));
+      }
     }
 
     /* ── Selection handlers ────────────────────────────────────── */
@@ -927,26 +917,48 @@
         price: parseInt(btn.dataset.price || 0),
         label: btn.firstChild.textContent.trim(),
       };
-      updateSummary();
-      if (group === 'body' || group === 'windows' || group === 'top') {
-        updateModelVariant();
+
+      // Windows section implicitly drives door count — keep body state in sync
+      // so computeVariantKey() always has an authoritative state.body.
+      if (group === 'windows') {
+        const wl = state.windows.label;
+        let syncLabel = null;
+        if      (wl.startsWith('4 Door') || wl.startsWith('4 door')) syncLabel = 'Four Door';
+        else if (wl.startsWith('2 Door') || wl.startsWith('2 door')) syncLabel = 'Two Door';
+        if (syncLabel) {
+          state.body = { price: 0, label: syncLabel };
+          document.querySelectorAll('.option-btn[data-group="body"]').forEach(b => {
+            b.classList.toggle('active', b.firstChild.textContent.trim() === syncLabel);
+          });
+        }
       }
+
+      updateSummary();
+      if (group === 'body' || group === 'windows' || group === 'top') updateModelVariant();
     };
 
-    // Multi-select (toggle): flips individual button without clearing others
+    // Multi-select (toggle): flips individual button without clearing others.
+    // Exterior accessories also load/unload 3D overlay objects via swapAccessory().
     window.toggleOption = function(btn) {
       const group = btn.dataset.group;
       const price = parseInt(btn.dataset.price || 0);
       const label = btn.firstChild.textContent.trim();
 
       btn.classList.toggle('active');
+      const active = btn.classList.contains('active');
 
-      if (btn.classList.contains('active')) {
+      if (active) {
         state[group].push({ price, label });
       } else {
         state[group] = state[group].filter(i => i.label !== label);
       }
       updateSummary();
+
+      if (group === 'exterior' && ACCESSORY_FOLDER[label]) {
+        if (typeof window.swapAccessory === 'function') {
+          window.swapAccessory(ACCESSORY_FOLDER[label], active);
+        }
+      }
     };
 
     // Color swatch: drives Three.js body material

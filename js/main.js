@@ -651,6 +651,20 @@ function initConfigScene() {
     envMapIntensity: 0.6,
   });
 
+  /* Variant window glass — tinted, semi-transparent, double-sided.
+     Toggled by setGlassVisible(); hidden when "No Windows" is selected. */
+  const variantGlassMat = new THREE.MeshPhysicalMaterial({
+    color:        new THREE.Color(0x88AABB),
+    transparent:  true,
+    opacity:      0.22,
+    roughness:    0.04,
+    metalness:    0.0,
+    transmission: 0.80,
+    side:         THREE.DoubleSide,
+    depthWrite:   false,
+    envMapIntensity: 1.2,
+  });
+
   const wheelMat = new THREE.MeshStandardMaterial({
     map:          wheelColorTex,
     normalMap:    wheelNormTex,
@@ -979,6 +993,7 @@ function initConfigScene() {
           else if (name === 'undercarriage') mat = variantUndercarriageMat;
           else if (name === 'bumper')        mat = variantBumperMat;
           else if (name === 'interior')      mat = variantInteriorMat;
+          else if (name === 'window_glass')  mat = variantGlassMat;
           else                               mat = variantBodyMat;
         }
 
@@ -1022,9 +1037,7 @@ function initConfigScene() {
     ind.innerHTML = '<span style="font-size:0.55rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.28)">Loading…</span>';
     if (canvas.parentElement) canvas.parentElement.appendChild(ind);
 
-    const HF  = 'new humvee files from our friend hunter';
-    const url = '/models/' + encodeURIComponent(HF) + '/' +
-                encodeURIComponent(folder) + '/web_model.obj';
+    const url = '/models/variants/' + encodeURIComponent(folder) + '/web_model.obj';
 
     console.log('[LuxHaus] fetching variant:', folder, url);
 
@@ -1040,6 +1053,45 @@ function initConfigScene() {
       console.error('[LuxHaus] variant load error:', folder, err);
       ind.style.opacity = '0';
       setTimeout(() => ind.remove(), 260);
+    });
+  };
+
+  /* ── Glass visibility toggle ─────────────────────────────────────
+     Called by the UI when the window configuration changes.
+     Hides the window_glass material group without reloading the model. */
+  window.setGlassVisible = function(visible) {
+    variantGlassMat.opacity    = visible ? 0.22 : 0.0;
+    variantGlassMat.visible    = visible;
+    variantGlassMat.depthWrite = false;
+    variantGlassMat.needsUpdate = true;
+  };
+
+  /* ── Accessory overlay system ────────────────────────────────────
+     Each accessory is a separate OBJ loaded from /models/accessories/<name>/.
+     Active accessories are added to accessoryGroup (a child of group) and
+     persist across base-variant swaps. Toggled on/off without re-fetching. */
+  const accessoryGroup = new THREE.Group();
+  group.add(accessoryGroup);
+  const accessoryCache = new Map();
+
+  window.swapAccessory = function(name, active) {
+    if (accessoryCache.has(name)) {
+      accessoryCache.get(name).visible = active;
+      return;
+    }
+    if (!active) return; // not loaded yet and being toggled off — nothing to do
+
+    const url = '/models/accessories/' + encodeURIComponent(name) + '/web_model.obj';
+    console.log('[LuxHaus] fetching accessory:', name, url);
+    const loader = new THREE.OBJLoader();
+    loader.load(url, function(obj) {
+      applyVariantMaterial(obj);
+      fitToScene(obj);
+      obj.visible = true;
+      accessoryCache.set(name, obj);
+      accessoryGroup.add(obj);
+    }, undefined, function(err) {
+      console.warn('[LuxHaus] accessory load failed (model not yet built):', name, err);
     });
   };
 
