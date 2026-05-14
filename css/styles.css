@@ -899,6 +899,31 @@ em { font-style:italic; color:var(--gold); }
   cursor: none;
 }
 .footer-col a:hover { color:var(--white); }
+.footer-col a.social-soon {
+  position: relative;
+  cursor: default;
+}
+.footer-col a.social-soon::after {
+  content: 'Coming Soon';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) translateX(8px);
+  margin-left: 0.5rem;
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  white-space: nowrap;
+}
+.footer-col a.social-soon:hover { color: rgba(255,255,255,0.42); }
+.footer-col a.social-soon:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(12px);
+}
 .footer-bottom {
   padding: 1.5rem 3.5rem;
   max-width: 1200px;

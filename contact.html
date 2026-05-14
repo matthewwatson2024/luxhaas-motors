@@ -87,6 +87,7 @@
       margin-top: 3rem;
     }
     .social-link {
+      position: relative;
       padding: 0.6rem 1.2rem;
       border: var(--border-gold);
       font-size: 0.62rem;
@@ -95,9 +96,34 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.5);
       transition: all 0.3s;
-      cursor: none;
+      cursor: default;
     }
-    .social-link:hover { border-color: var(--gold); color: var(--gold); }
+    .social-link::after {
+      content: 'Coming Soon';
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: var(--gray-900);
+      border: var(--border-gold);
+      color: var(--gold);
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      padding: 0.35rem 0.75rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    .social-link:hover {
+      border-color: var(--gold);
+      color: rgba(255,255,255,0.7);
+    }
+    .social-link:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
 
     /* Decorative large text */
     .contact-deco {
@@ -362,9 +388,9 @@
         </div>
 
         <div class="contact-social reveal">
-          <a href="#" class="social-link">Instagram</a>
-          <a href="#" class="social-link">LinkedIn</a>
-          <a href="#" class="social-link">YouTube</a>
+          <a href="#" class="social-link" onclick="return false">Instagram</a>
+          <a href="#" class="social-link" onclick="return false">LinkedIn</a>
+          <a href="#" class="social-link" onclick="return false">YouTube</a>
         </div>
 
         <div class="contact-deco">LH</div>
@@ -466,7 +492,7 @@
     </div>
     <div class="hours-item">
       <span class="hours-day">International Clients</span>
-      <span class="hours-time">24/7 Concierge Available</span>
+      <span class="hours-time">&lt;24hr Response Time</span>
     </div>
   </div>
 
