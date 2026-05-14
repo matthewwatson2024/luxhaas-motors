@@ -804,6 +804,32 @@
       budget:    { label: '$20k - $35k' },
     };
 
+    /* ── Variant folder map ────────────────────────────────────────
+       Key: `${doors}-${hasDoors}-${top}`
+       Values must match folder names exactly (all lowercase, spaces).  */
+    const VARIANT_MAP = {
+      '4-true-hard':    '4 door, hard top',
+      '4-true-soft':    '4 door slant back soft top',
+      '4-true-slant':   '4 door, hard top, slant back',
+      '4-true-notop':   '4 door, no doors, no top',
+      '4-true-openbed': '4 door, no doors, no top',
+      '4-false-hard':   '4 door, hard top',
+      '4-false-soft':   '4 door, no doors, soft top',
+      '4-false-slant':  '4 door, no doors, slant back',
+      '4-false-notop':  '4 door, no doors, no top',
+      '4-false-openbed':'4 door, no doors, no top',
+      '2-true-hard':    '2 door, hard top',
+      '2-true-soft':    '2 door, no doors, soft top',
+      '2-true-slant':   '2 door, no doors, slant back',
+      '2-true-notop':   '2 door, no doors, no top',
+      '2-true-openbed': '2 door, no doors, no top',
+      '2-false-hard':   '2 door, no doors, hard top',
+      '2-false-soft':   '2 door, no doors, soft top',
+      '2-false-slant':  '2 door, no doors, slant back',
+      '2-false-notop':  '2 door, no doors, no top',
+      '2-false-openbed':'2 door, no doors, no top',
+    };
+
     /* ── Helpers ───────────────────────────────────────────────── */
     function multiTotal(arr)  { return arr.reduce((s, i) => s + i.price, 0); }
 
@@ -856,6 +882,39 @@
       }
     }
 
+    /* ── Variant key + model swap ─────────────────────────────── */
+    function computeVariantKey() {
+      const wl = state.windows.label;
+      const bl = state.body.label;
+      const tl = state.top.label;
+
+      // Door count: windows label encodes it when it starts with "N Door"
+      let doors;
+      if      (wl.startsWith('4 Door') || wl.startsWith('4 door')) doors = '4';
+      else if (wl.startsWith('2 Door') || wl.startsWith('2 door')) doors = '2';
+      else doors = bl === 'Two Door' ? '2' : '4'; // Windshield / X-Type fallback
+
+      // hasDoors: false when "No Windows" or bare Windshield
+      const hasDoors = !(wl.includes('No Windows') || wl === 'Windshield');
+
+      const topMap = {
+        'Hardtop':        'hard',
+        'Soft Top':       'soft',
+        'Slant Back Top': 'slant',
+        'No Top':         'notop',
+        'Open Bed':       'openbed',
+      };
+      const top = topMap[tl] || 'hard';
+
+      return `${doors}-${hasDoors}-${top}`;
+    }
+
+    function updateModelVariant() {
+      if (typeof window.swapVariantModel !== 'function') return;
+      const folder = VARIANT_MAP[computeVariantKey()] || null;
+      window.swapVariantModel(folder);
+    }
+
     /* ── Selection handlers ────────────────────────────────────── */
 
     // Single-select (radio): clears group, sets one active
@@ -869,6 +928,9 @@
         label: btn.firstChild.textContent.trim(),
       };
       updateSummary();
+      if (group === 'body' || group === 'windows' || group === 'top') {
+        updateModelVariant();
+      }
     };
 
     // Multi-select (toggle): flips individual button without clearing others

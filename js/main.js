@@ -308,116 +308,159 @@ function initConfigScene() {
   const canvas = document.getElementById('configCanvas');
   if (!canvas || typeof THREE === 'undefined') return;
 
+  /* ── Mobile detection ────────────────────────────────────────
+     isMobile gates renderer settings, shadow maps, particles,
+     pixel ratio, frame-rate cap, and which model file to load.
+  ────────────────────────────────────────────────────────────── */
+  const isMobile   = window.innerWidth < 768 || ('ontouchstart' in window && window.innerWidth < 1024);
+  const renderScale = isMobile ? 0.55 : 1.0;
+
+  /* ── Variant-swap state ──────────────────────────────────────
+     baseModel    — the initially-loaded HMMWV_Desert showcase mesh.
+     activeVariant — Hunter variant currently in scene (null = base shown).
+     variantCache  — folder key → loaded THREE.Object3D for instant re-swap.
+  ────────────────────────────────────────────────────────────── */
+  let baseModel    = null;
+  let activeVariant = null;
+  const variantCache = new Map();
+
   const scene  = new THREE.Scene();
   scene.background = new THREE.Color(0x080808);
 
-  const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 200);
+  const pW = canvas.parentElement ? canvas.parentElement.clientWidth  : canvas.clientWidth;
+  const pH = canvas.parentElement ? canvas.parentElement.clientHeight : canvas.clientHeight;
+  const camera = new THREE.PerspectiveCamera(45, pW / pH, 0.1, 200);
   camera.position.set(6, 2.8, 6);
   camera.lookAt(0, 0.8, 0);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.shadowMap.enabled   = true;
-  renderer.shadowMap.type      = THREE.PCFSoftShadowMap;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile });
+  renderer.setSize(Math.floor(pW * renderScale), Math.floor(pH * renderScale), false);
+  renderer.setPixelRatio(isMobile ? 1 : Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled   = !isMobile;
+  if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding      = THREE.sRGBEncoding;
-  renderer.toneMapping         = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMapping         = isMobile ? THREE.LinearToneMapping : THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = isMobile ? 1.2 : 1.1;
 
+  if (isMobile) { canvas.style.width = '100%'; canvas.style.height = '100%'; }
 
-  /* ── Lighting rig ─────────────────────────────────────────────────
-     3-point studio setup tuned for PBR + ACES tone mapping.
+  /* ── Studio IBL environment map ──────────────────────────────
+     Generates a synthetic equirectangular probe matching the 5-light
+     studio rig below (warm key upper-right, cool fill left-back, cool
+     rim upper-back). Processed by PMREMGenerator into a PMREM cube map
+     and set on scene.environment so every MeshStandardMaterial /
+     MeshPhysicalMaterial gets diffuse IBL + specular IBL for free.
 
-     · Hemisphere  — sky (cool blue) / ground (warm brown) gradient;
-                     replaces flat AmbientLight so no surface is fully black
-                     but shadow contrast is preserved.
-     · Key         — primary light, front-right-high, slightly warm white;
-                     defines the main highlight and casts soft shadows.
-     · Fill        — opposite side (left-rear), cool blue-white, ~¼ key power;
-                     lifts shadow faces without washing them out.
-     · Rim         — directly behind the vehicle, cool neutral;
-                     separates silhouette edges from the dark background.
-     · Bounce      — low-intensity warm point near the ground plane;
-                     simulates light bouncing back up into the undercarriage.
-  ────────────────────────────────────────────────────────────────── */
-  const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, 0.55);
+     No UV coordinates are required — scene.environment is sampled by
+     the shader using the surface reflection vector, not uv.
+     Desktop only: mobile uses simpler lighting path.
+  ────────────────────────────────────────────────────────────── */
+  if (!isMobile) {
+    (function buildStudioEnv() {
+      /* 64×32 equirectangular: enough for smooth PMREM blur levels.
+         Values >1 in float would give HDR, but UnsignedByte is universally
+         safe on macOS Metal WebGL (no OES_texture_float needed).
+         The direct-light specular highlight is handled by the scene lights;
+         the env map provides the ambient wrap-around reflective quality. */
+      var EW = 64, EH = 32;
+      var px = new Uint8Array(EW * EH * 4);
+
+      /* Normalised directions matching scene light positions:
+           key  (6, 12, 4)   → (0.429, 0.857, 0.286)
+           fill (-8, 5, -6)  → (-0.715, 0.447, -0.537)
+           rim  (0, 4, -10)  → (0.000, 0.371, -0.928)  */
+      for (var ey = 0; ey < EH; ey++) {
+        for (var ex = 0; ex < EW; ex++) {
+          var phi  = (ey / EH) * Math.PI;
+          var th   = (ex / EW) * Math.PI * 2;
+          var sp   = Math.sin(phi);
+          var nx   = sp * Math.sin(th);
+          var ny   = Math.cos(phi);          /* 1=top, -1=floor */
+          var nz   = sp * Math.cos(th);
+          var tSky = (ny + 1) * 0.5;        /* 0=floor … 1=ceiling */
+
+          /* Studio sky/ground gradient */
+          var R = (0.02 + tSky * 0.09) * 255;
+          var G = (0.03 + tSky * 0.11) * 255;
+          var B = (0.07 + tSky * 0.20) * 255;
+
+          /* Warm key light (upper-right-front) */
+          var kd = Math.pow(Math.max(0, nx*0.429 + ny*0.857 + nz*0.286), 10);
+          R = Math.min(255, R + kd*235); G = Math.min(255, G + kd*200); B = Math.min(255, B + kd*140);
+
+          /* Cool fill (left-back) */
+          var fd = Math.pow(Math.max(0, nx*(-0.715) + ny*0.447 + nz*(-0.537)), 4);
+          R = Math.min(255, R + fd*65);  G = Math.min(255, G + fd*80);  B = Math.min(255, B + fd*125);
+
+          /* Cool rim (upper-back) */
+          var rd = Math.pow(Math.max(0, nx*0 + ny*0.371 + nz*(-0.928)), 6);
+          R = Math.min(255, R + rd*80);  G = Math.min(255, G + rd*100); B = Math.min(255, B + rd*145);
+
+          var ei = (ey * EW + ex) * 4;
+          px[ei]=R; px[ei+1]=G; px[ei+2]=B; px[ei+3]=255;
+        }
+      }
+
+      var envTex       = new THREE.DataTexture(px, EW, EH, THREE.RGBAFormat, THREE.UnsignedByteType);
+      envTex.encoding  = THREE.sRGBEncoding;
+      envTex.needsUpdate = true;
+
+      var pmrem        = new THREE.PMREMGenerator(renderer);
+      pmrem.compileEquirectangularShader();
+      scene.environment = pmrem.fromEquirectangular(envTex).texture;
+
+      envTex.dispose();
+      pmrem.dispose();
+    })();
+  }
+
+  /* ── Lighting rig ─────────────────────────────────────────────
+     Desktop: full 5-light studio rig + PCFSoft 2048² shadow map.
+     Mobile:  hemisphere + key (no shadow) + fill — saves the full
+              shadow-map render pass and 2 light evaluations per frag.
+  ────────────────────────────────────────────────────────────── */
+  const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, isMobile ? 0.7 : 0.55);
   scene.add(hemi);
 
-  const keyLight = new THREE.DirectionalLight(0xFFF5E0, 2.2);
+  const keyLight = new THREE.DirectionalLight(0xFFF5E0, isMobile ? 2.0 : 2.2);
   keyLight.position.set(6, 12, 4);
-  keyLight.castShadow              = true;
-  keyLight.shadow.mapSize.set(2048, 2048);
-  keyLight.shadow.camera.near      = 1;
-  keyLight.shadow.camera.far       = 50;
-  keyLight.shadow.camera.left      = -8;
-  keyLight.shadow.camera.right     =  8;
-  keyLight.shadow.camera.top       =  8;
-  keyLight.shadow.camera.bottom    = -8;
-  keyLight.shadow.bias             = -0.0004;
+  if (!isMobile) {
+    keyLight.castShadow           = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.near   = 1;
+    keyLight.shadow.camera.far    = 50;
+    keyLight.shadow.camera.left   = -8;
+    keyLight.shadow.camera.right  =  8;
+    keyLight.shadow.camera.top    =  8;
+    keyLight.shadow.camera.bottom = -8;
+    keyLight.shadow.bias          = -0.0004;
+  }
   scene.add(keyLight);
 
   const fillLight = new THREE.DirectionalLight(0xCBDFF5, 0.55);
   fillLight.position.set(-8, 5, -6);
   scene.add(fillLight);
 
-  const rimLight = new THREE.DirectionalLight(0xDEECF8, 1.0);
-  rimLight.position.set(0, 4, -10);
-  scene.add(rimLight);
+  if (!isMobile) {
+    const rimLight = new THREE.DirectionalLight(0xDEECF8, 1.0);
+    rimLight.position.set(0, 4, -10);
+    scene.add(rimLight);
 
-  const bounceLight = new THREE.PointLight(0xFFEDD0, 0.7, 10);
-  bounceLight.position.set(0, -0.5, 0);
-  scene.add(bounceLight);
+    const bounceLight = new THREE.PointLight(0xFFEDD0, 0.7, 10);
+    bounceLight.position.set(0, -0.5, 0);
+    scene.add(bounceLight);
+  }
 
-  /* ── Magical floating particle orbs ───────────────────────────
-     Two nested sphere clouds — outer drifts slowly, inner faster.
-     AdditiveBlending + depthWrite:false means they glow without
-     occluding the vehicle or each other.
-     Rejection sampling gives uniform volumetric distribution
-     (pure spherical coords would cluster near the poles). */
-  const pCloud1 = (function() {
-    const S   = 64;
-    const cvs = document.createElement('canvas');
-    cvs.width = cvs.height = S;
-    const ctx = cvs.getContext('2d');
-    const g = ctx.createRadialGradient(S/2, S/2, 0, S/2, S/2, S/2);
-    g.addColorStop(0.00, 'rgba(255, 235, 145, 1.00)');
-    g.addColorStop(0.20, 'rgba(230, 185,  65, 0.80)');
-    g.addColorStop(0.55, 'rgba(190, 140,  25, 0.25)');
-    g.addColorStop(1.00, 'rgba(160, 110,   5, 0.00)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, S, S);
-    const sprite = new THREE.CanvasTexture(cvs);
+  /* ── Textures ─────────────────────────────────────────────────
+     Desktop: original 4 K PBR maps (~74 MB).
+     Mobile:  pre-baked 512×512 JPEG equivalents (~520 KB total).
+              Normal + roughness maps omitted on mobile — simpler
+              fragment shader, 7 fewer texture fetches.
+  ────────────────────────────────────────────────────────────── */
+  const TX = isMobile
+    ? '/models/humvee-1/mobile-textures/'
+    : '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_Textures/';
 
-    function sphereCloud(count, radius, ptSize, opacity) {
-      const pos = new Float32Array(count * 3);
-      let i = 0;
-      while (i < count) {
-        const x = (Math.random() * 2 - 1) * radius;
-        const y = (Math.random() * 2 - 1) * radius;
-        const z = (Math.random() * 2 - 1) * radius;
-        if (x*x + y*y + z*z > radius * radius) continue;
-        pos[i*3] = x; pos[i*3+1] = y; pos[i*3+2] = z;
-        i++;
-      }
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      const mat = new THREE.PointsMaterial({
-        size: ptSize, map: sprite, color: 0xD4A830,
-        transparent: true, opacity,
-        alphaTest: 0.001, sizeAttenuation: true,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      });
-      return new THREE.Points(geo, mat);
-    }
-
-    const c1 = sphereCloud(150, 20, 0.065, 0.36);
-    const c2 = sphereCloud( 80, 11, 0.038, 0.28);
-    scene.add(c1, c2);
-    return { c1, c2 };
-  })();
-
-  /* Texture loader + texture map */
-  const TX = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_Textures/';
   const txLoader = new THREE.TextureLoader();
   function loadTex(name, sRGB) {
     const t = txLoader.load(TX + name);
@@ -426,27 +469,96 @@ function initConfigScene() {
     return t;
   }
 
-  const bodyColorTex  = loadTex('Body_Color.jpg',        true);
-  const bodyNormTex   = loadTex('Body_Normal.jpg',        false);
-  const bodyRoughTex  = loadTex('Body_Metallic.jpg',      false);
-  const wheelColorTex = loadTex('Wheels_Color.jpg',       true);
-  const wheelNormTex  = loadTex('Wheels_Normal.jpg',      false);
-  const wheelRoughTex = loadTex('Wheels_Roughness.jpg',   false);
-  const suspColorTex  = loadTex('Suspensions_Color.jpg',  true);
-  const suspNormTex   = loadTex('Suspensions_Normal.jpg', false);
-  const suspMetalTex  = loadTex('Suspensions_Metallic.jpg', false);
-  const glassColorTex = loadTex('Glass_color.jpg',        true);
-  const lightsColorTex= loadTex('lights_color.jpg',       true);
-  const plateColorTex = loadTex('Nameplates_color.jpg',   true);
-  const plateOpacTex  = loadTex('Nameplates_opacity.jpg', false);
+  const bodyColorTex   = loadTex('Body_Color.jpg',        true);
+  const wheelColorTex  = loadTex('Wheels_Color.jpg',      true);
+  const suspColorTex   = loadTex('Suspensions_Color.jpg', true);
+  const glassColorTex  = loadTex('Glass_color.jpg',       true);
+  const lightsColorTex = loadTex('lights_color.jpg',      true);
+  const plateColorTex  = loadTex('Nameplates_color.jpg',  true);
 
-  /* Body PBR material — referenced externally for color swaps */
+  const bodyNormTex   = isMobile ? null : loadTex('Body_Normal.jpg',          false);
+  const bodyRoughTex  = isMobile ? null : loadTex('Body_Metallic.jpg',        false);
+  const wheelNormTex  = isMobile ? null : loadTex('Wheels_Normal.jpg',        false);
+  const wheelRoughTex = isMobile ? null : loadTex('Wheels_Roughness.jpg',     false);
+  const suspNormTex   = isMobile ? null : loadTex('Suspensions_Normal.jpg',   false);
+  const suspMetalTex  = isMobile ? null : loadTex('Suspensions_Metallic.jpg', false);
+  const plateOpacTex  = isMobile ? null : loadTex('Nameplates_opacity.jpg',   false);
+
+  /* Body PBR material — used by the base HMMWV_Desert model (has UV). */
   const bodyMat = new THREE.MeshStandardMaterial({
     map:          bodyColorTex,
     normalMap:    bodyNormTex,
     roughnessMap: bodyRoughTex,
     metalness:    0.22,
     roughness:    0.65,
+  });
+
+  /* Premium automotive paint for UV-less Hunter variant meshes.
+     Uses MeshPhysicalMaterial (extends MeshStandardMaterial) which adds
+     clearcoat and finer PBR controls — all UV-independent.
+
+     SAFE on macOS Metal WebGL: none of the active properties below
+     sample a texture via uv coordinates. The shader only reads the
+     surface normal and reflection vector, both of which are supplied
+     by the geometry's vn attribute.
+
+     clearcoat         — two-layer paint: pigment base + clear lacquer on top.
+                         Gives the characteristic "depth" of premium paint.
+     clearcoatRoughness— lacquer is nearly mirror-smooth (0.06); concentrates
+                         specular into a crisp highlight band.
+     roughness         — base coat under the lacquer; 0.30 = semi-gloss.
+     metalness         — solid automotive paint is non-metallic (0.08).
+     envMapIntensity   — picks up scene.environment IBL; drives the
+                         wrap-around ambient reflection with no UV needed.
+     reflectivity      — Fresnel at grazing angles; 0.6 ≈ 4% normal incidence. */
+  const variantBodyMat = new THREE.MeshPhysicalMaterial({
+    color:              new THREE.Color(0xC4A882),
+    metalness:          0.08,
+    roughness:          0.30,
+    clearcoat:          0.70,
+    clearcoatRoughness: 0.08,
+    envMapIntensity:    isMobile ? 0.7 : 1.4,
+    reflectivity:       0.6,
+  });
+
+  /* Variant tire material — matte black rubber, no clearcoat, no UV needed. */
+  const variantTireMat = new THREE.MeshStandardMaterial({
+    color:     new THREE.Color(0x111111),
+    metalness: 0.0,
+    roughness: 0.88,
+    envMapIntensity: isMobile ? 0.2 : 0.4,
+  });
+
+  /* Variant wheel-hub material — dark gunmetal, slightly metallic, no UV needed. */
+  const variantWheelMat = new THREE.MeshStandardMaterial({
+    color:     new THREE.Color(0x1C1F22),
+    metalness: 0.55,
+    roughness: 0.50,
+    envMapIntensity: isMobile ? 0.4 : 0.9,
+  });
+
+  /* Variant undercarriage material — very dark metallic grey, matte, no UV needed. */
+  const variantUndercarriageMat = new THREE.MeshStandardMaterial({
+    color:     new THREE.Color(0x111213),
+    metalness: 0.60,
+    roughness: 0.70,
+    envMapIntensity: isMobile ? 0.2 : 0.5,
+  });
+
+  /* Variant interior material — dark charcoal, near-flat finish, no UV needed. */
+  const variantInteriorMat = new THREE.MeshStandardMaterial({
+    color:     new THREE.Color(0x2D2820),
+    metalness: 0.05,
+    roughness: 0.85,
+    envMapIntensity: isMobile ? 0.1 : 0.3,
+  });
+
+  /* Variant bumper material — dark military gray, matte, no UV needed. */
+  const variantBumperMat = new THREE.MeshStandardMaterial({
+    color:     new THREE.Color(0x1A1C1E),
+    metalness: 0.45,
+    roughness: 0.75,
+    envMapIntensity: isMobile ? 0.2 : 0.6,
   });
 
   const wheelMat = new THREE.MeshStandardMaterial({
@@ -474,12 +586,12 @@ function initConfigScene() {
   });
 
   const lightsMat = new THREE.MeshStandardMaterial({
-    map:              lightsColorTex,
-    emissiveMap:      lightsColorTex,
-    emissive:         new THREE.Color(0xffffff),
-    emissiveIntensity:0.35,
-    metalness:        0.15,
-    roughness:        0.12,
+    map:               lightsColorTex,
+    emissiveMap:       lightsColorTex,
+    emissive:          new THREE.Color(0xffffff),
+    emissiveIntensity: 0.35,
+    metalness:         0.15,
+    roughness:         0.12,
   });
 
   const plateMat = new THREE.MeshStandardMaterial({
@@ -516,72 +628,55 @@ function initConfigScene() {
   canvas.parentElement.style.position = 'relative';
   canvas.parentElement.appendChild(loadOverlay);
 
-  /* Load OBJ with MTL */
-  const mtlLoader = new THREE.MTLLoader();
-  const OBJ_PATH  = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_OBJ/';
-  mtlLoader.setPath(OBJ_PATH);
-  mtlLoader.load('HMMWV_Desert_OBJ.mtl', function(mtlMats) {
-    mtlMats.preload();
-    const objLoader = new THREE.OBJLoader();
-    objLoader.setMaterials(mtlMats);
-    objLoader.setPath(OBJ_PATH);
-    objLoader.load('HMMWV_Desert_OBJ.obj', function(object) {
+  /* ── Shared model-positioning helper ─────────────────────────
+     Auto-centres and scales any loaded OBJ to fit the 5.5-unit
+     scene space, then grounds it on y=0.
+  ────────────────────────────────────────────────────────────── */
+  function fitToScene(object) {
+    const box   = new THREE.Box3().setFromObject(object);
+    const size  = box.getSize(new THREE.Vector3());
+    const scale = 5.5 / Math.max(size.x, size.y, size.z);
+    object.scale.setScalar(scale);
+    const box2    = new THREE.Box3().setFromObject(object);
+    const center2 = box2.getCenter(new THREE.Vector3());
+    object.position.x = -center2.x;
+    object.position.z = -center2.z;
+    object.position.y = -box2.min.y;
+  }
 
-      /* Apply PBR textures per named group.
-         OBJLoader sets the group name on the Mesh itself (child.name),
-         not on its parent container — using parent.name always returns ''
-         and would assign bodyMat to every part. */
-      object.traverse(function(child) {
-        if (!child.isMesh) return;
-        child.castShadow    = true;
-        child.receiveShadow = true;
-        child.material = materialForGroup(child.name);
-      });
+  /* ── Base HMMWV_Desert model loading ─────────────────────────
+     Desktop: MTL first (preserves material groups), then full OBJ.
+     Mobile:  skip MTL (we override all mats anyway), load smaller
+              pre-decimated mesh for faster load + lower GPU cost.
+  ────────────────────────────────────────────────────────────── */
+  const OBJ_PATH = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_OBJ/';
+  const baseFile = isMobile ? 'HMMWV_Desert_Mobile.obj' : 'HMMWV_Desert_OBJ.obj';
 
-      /* Auto-center and scale to fit nicely in scene */
-      const box = new THREE.Box3().setFromObject(object);
-      const size = box.getSize(new THREE.Vector3());
-      const scale = 5.5 / Math.max(size.x, size.y, size.z);
-      object.scale.setScalar(scale);
-
-      /* After scaling recompute box to ground the model */
-      const box2   = new THREE.Box3().setFromObject(object);
-      const center2 = box2.getCenter(new THREE.Vector3());
-      object.position.x = -center2.x;
-      object.position.z = -center2.z;
-      object.position.y = -box2.min.y;
-
-      group.add(object);
-      loadOverlay.remove();
-
-    }, undefined, function(err) {
-      console.error('HMMWV OBJ load error:', err);
-      loadOverlay.querySelector('span').textContent = 'Model unavailable';
+  function onBaseLoad(object) {
+    object.traverse(function(child) {
+      if (!child.isMesh) return;
+      child.castShadow    = !isMobile;
+      child.receiveShadow = !isMobile;
+      const hasUV = !!child.geometry.attributes.uv;
+      /* Safety gate: never assign a UV-sampling material to UV-less geometry.
+         The base HMMWV_Desert OBJ has full UVs, so this should always be true. */
+      child.material = hasUV ? materialForGroup(child.name) : variantBodyMat;
+      console.log('[LuxHaus] base mesh "' + (child.name || '(unnamed)') + '" | hasUV:', hasUV, '| mat:', child.material.type);
     });
-  }, undefined, function(err) {
-    console.warn('MTL load failed, loading OBJ without materials:', err);
-    const objLoader = new THREE.OBJLoader();
-    objLoader.setPath(OBJ_PATH);
-    objLoader.load('HMMWV_Desert_OBJ.obj', function(object) {
-      object.traverse(function(child) {
-        if (!child.isMesh) return;
-        child.castShadow    = true;
-        child.receiveShadow = true;
-        child.material = materialForGroup(child.name);
-      });
-      const box = new THREE.Box3().setFromObject(object);
-      const size = box.getSize(new THREE.Vector3());
-      const scale = 5.5 / Math.max(size.x, size.y, size.z);
-      object.scale.setScalar(scale);
-      const box2    = new THREE.Box3().setFromObject(object);
-      const center2 = box2.getCenter(new THREE.Vector3());
-      object.position.x = -center2.x;
-      object.position.z = -center2.z;
-      object.position.y = -box2.min.y;
-      group.add(object);
-      loadOverlay.remove();
-    });
-  });
+    fitToScene(object);
+    group.add(object);
+    baseModel = object;
+    loadOverlay.remove();
+  }
+
+  function onBaseError(err) {
+    console.error('[LuxHaus] base OBJ load error:', err);
+    loadOverlay.querySelector('span').textContent = 'Model unavailable';
+  }
+
+  const objLoader = new THREE.OBJLoader();
+  objLoader.setPath(OBJ_PATH);
+  objLoader.load(baseFile, onBaseLoad, undefined, onBaseError);
 
   /* Drag-to-rotate controls */
   let isDragging = false, prevX = 0, prevY = 0;
@@ -612,21 +707,28 @@ function initConfigScene() {
     prevY = e.touches[0].clientY;
   }, { passive: true });
 
+  /* ── Render loop ──────────────────────────────────────────────
+     Mobile: capped at 30 fps — rAF fires at 60 Hz but render work
+     is skipped on alternate ticks. Primed at -interval so the first
+     tick always renders.
+  ────────────────────────────────────────────────────────────── */
   const clock = new THREE.Clock();
-  (function frame() {
+  const mobileInterval = 1000 / 30;
+  let lastFrameMs = -mobileInterval;
+
+  (function frame(now) {
     requestAnimationFrame(frame);
+
+    if (isMobile) {
+      if ((now || 0) - lastFrameMs < mobileInterval) return;
+      lastFrameMs = now || 0;
+    }
+
     const t = clock.getElapsedTime();
     if (!isDragging) rotY += 0.003;
 
     group.rotation.y = rotY;
     group.rotation.x = rotX;
-
-    pCloud1.c1.rotation.y =  t * 0.007;
-    pCloud1.c1.rotation.x =  t * 0.003;
-    pCloud1.c1.material.opacity = 0.34 + Math.sin(t * 0.65) * 0.07;
-    pCloud1.c2.rotation.y = -t * 0.005;
-    pCloud1.c2.rotation.z =  t * 0.004;
-    pCloud1.c2.material.opacity = 0.26 + Math.sin(t * 0.85 + 1.3) * 0.06;
 
     renderer.render(scene, camera);
   })();
@@ -647,7 +749,6 @@ function initConfigScene() {
       return (seed >>> 0) / 0x100000000;
     }
 
-    // Woodland palette: sandy tan base, olive, dark forest green, bark brown
     const palette = ['#7B7246', '#4B5E35', '#2F3D1E', '#3B2B14'];
     ctx.fillStyle = palette[0];
     ctx.fillRect(0, 0, S, S);
@@ -690,29 +791,176 @@ function initConfigScene() {
        'texture' — assign the provided map; color tint stays white
        'solid'   — no map; hex is applied directly as solid paint
      To add a new finish, register one entry here only. */
+  /* solidFallback — colour used for Hunter variants (no UV) when the
+     swatch normally drives a texture on the base model. */
   const COLOR_MODES = {
-    '#C4A882': { kind: 'texture', map: bodyColorTex          },
-    'CAMO':    { kind: 'texture', map: createCamoTexture()   },
+    '#C4A882': { kind: 'texture', map: bodyColorTex,        solidFallback: '#C4A882' },
+    'CAMO':    { kind: 'texture', map: createCamoTexture(), solidFallback: '#4B5E35' },
   };
 
   window.setVehicleColor = function(raw) {
-    const mode = COLOR_MODES[raw.toUpperCase()] || COLOR_MODES[raw] || { kind: 'solid' };
+    const mode   = COLOR_MODES[raw.toUpperCase()] || COLOR_MODES[raw] || { kind: 'solid' };
+    const isCamo = raw.toUpperCase() === 'CAMO';
+
     if (mode.kind === 'texture') {
       bodyMat.map = mode.map;
       bodyMat.color.set(0xffffff);
+      variantBodyMat.color.set(mode.solidFallback || 0xffffff);
     } else {
       bodyMat.map = null;
       bodyMat.color.set(raw);
+      variantBodyMat.color.set(raw);
     }
-    bodyMat.needsUpdate = true;
+
+    /* Camo is a flat military field finish — dull, no clearcoat.
+       Every other swatch is showroom automotive paint — high-gloss clearcoat. */
+    if (isCamo) {
+      variantBodyMat.roughness          = 0.75;
+      variantBodyMat.metalness          = 0.02;
+      variantBodyMat.clearcoat          = 0.05;
+      variantBodyMat.clearcoatRoughness = 0.60;
+    } else {
+      variantBodyMat.roughness          = 0.30;
+      variantBodyMat.metalness          = 0.08;
+      variantBodyMat.clearcoat          = 0.70;
+      variantBodyMat.clearcoatRoughness = 0.08;
+    }
+
+    bodyMat.needsUpdate        = true;
+    variantBodyMat.needsUpdate = true;
+  };
+
+  /* ── Variant model swap API ───────────────────────────────────
+     Hunter OBJ files use v//vn face format (normals only, no UV).
+     variantBodyMat has zero UV-dependent shader features, preventing
+     the "starry/fragmented" rendering caused by missing uv attributes
+     feeding garbage values into a UV-sampling WebGL shader.
+
+     Cache-hit:  instant swap — O(1), no network request.
+     Cache-miss: loading overlay shown until OBJ is parsed and staged.
+  ────────────────────────────────────────────────────────────── */
+  window.swapVariantModel = function(folder) {
+
+    /* Walk every mesh in the loaded OBJ hierarchy and assign the correct
+       UV-free material based on the OBJ group name set by segment_variants.py.
+
+       Group → material mapping:
+         "tire"      → variantTireMat  (matte black rubber)
+         "wheel_hub" → variantWheelMat (dark gunmetal)
+         everything else → variantBodyMat (premium automotive paint)
+
+       All three materials are UV-free — no map / normalMap / roughnessMap.
+       macOS Metal WebGL is safe: no uv attribute is ever sampled. */
+    /* Debug segmentation: set window.LH_DEBUG_SEG = true in console to see
+       each group as a distinct flat colour — useful for inspecting classification. */
+    var _debugMats = null;
+    function _getDebugMat(name) {
+      if (!_debugMats) {
+        var dc = { body:0xC4A882, tire:0x111111, wheel_hub:0xC8C8C8,
+                   undercarriage:0xCC2222, bumper:0x444444, interior:0x3355AA };
+        _debugMats = {};
+        Object.keys(dc).forEach(function(k) {
+          _debugMats[k] = new THREE.MeshBasicMaterial({ color: dc[k], side: THREE.DoubleSide });
+        });
+        _debugMats['__unknown'] = new THREE.MeshBasicMaterial({ color: 0xFF00FF, side: THREE.DoubleSide });
+      }
+      return _debugMats[name] || _debugMats['__unknown'];
+    }
+
+    function applyVariantMaterial(obj) {
+      obj.traverse(function(child) {
+        if (!child.isMesh) return;
+
+        const geo  = child.geometry;
+        const name = (child.name || '').toLowerCase();
+
+        var mat;
+        if (window.LH_DEBUG_SEG) {
+          mat = _getDebugMat(name);
+        } else {
+          /* Group → material mapping (groups set by segment_variants.py):
+               tire          → matte black rubber
+               wheel_hub     → dark gunmetal disc
+               undercarriage → very dark metallic underside
+               bumper        → dark military gray
+               interior      → dark charcoal cabin
+               body          → automotive paint + clearcoat (default) */
+          if      (name === 'tire')          mat = variantTireMat;
+          else if (name === 'wheel_hub')     mat = variantWheelMat;
+          else if (name === 'undercarriage') mat = variantUndercarriageMat;
+          else if (name === 'bumper')        mat = variantBumperMat;
+          else if (name === 'interior')      mat = variantInteriorMat;
+          else                               mat = variantBodyMat;
+        }
+
+        if (!geo.attributes.normal) geo.computeVertexNormals();
+
+        child.material             = mat;
+        child.material.needsUpdate = true;
+        child.castShadow           = !isMobile;
+        child.receiveShadow        = !isMobile;
+      });
+    }
+
+    function displayModel(obj) {
+      if (activeVariant && activeVariant !== obj) {
+        group.remove(activeVariant);
+      }
+      activeVariant = obj;
+      if (baseModel) baseModel.visible = (obj === null);
+      if (obj) {
+        obj.visible = true;
+        if (obj.parent !== group) group.add(obj);
+      }
+    }
+
+    if (!folder) { displayModel(null); return; }
+
+    if (variantCache.has(folder)) {
+      console.log('[LuxHaus] variant cache hit:', folder);
+      displayModel(variantCache.get(folder));
+      return;
+    }
+
+    /* Not yet cached — fetch, process, stage, and display. */
+    const ind = document.createElement('div');
+    Object.assign(ind.style, {
+      position: 'absolute', inset: '0', display: 'flex',
+      alignItems: 'center', justifyContent: 'center',
+      background: 'rgba(8,8,8,0.6)', pointerEvents: 'none',
+      zIndex: '6', transition: 'opacity 0.25s',
+    });
+    ind.innerHTML = '<span style="font-size:0.55rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.28)">Loading…</span>';
+    canvas.parentElement.appendChild(ind);
+
+    const HF  = 'new humvee files from our friend hunter';
+    const url = '/models/' + encodeURIComponent(HF) + '/' +
+                encodeURIComponent(folder) + '/web_model.obj';
+
+    console.log('[LuxHaus] fetching variant:', folder, url);
+
+    const loader = new THREE.OBJLoader();
+    loader.load(url, function(obj) {
+      applyVariantMaterial(obj);
+      fitToScene(obj);
+      variantCache.set(folder, obj);
+      displayModel(obj);
+      ind.style.opacity = '0';
+      setTimeout(() => ind.remove(), 260);
+    }, undefined, function(err) {
+      console.error('[LuxHaus] variant load error:', folder, err);
+      ind.style.opacity = '0';
+      setTimeout(() => ind.remove(), 260);
+    });
   };
 
   new ResizeObserver(() => {
     const p = canvas.parentElement;
     if (!p) return;
-    camera.aspect = p.clientWidth / p.clientHeight;
+    const w = p.clientWidth, h = p.clientHeight;
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(p.clientWidth, p.clientHeight);
+    renderer.setSize(Math.floor(w * renderScale), Math.floor(h * renderScale), !isMobile);
   }).observe(canvas.parentElement);
 }
 
