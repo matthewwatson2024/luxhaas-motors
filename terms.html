@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service — LuxHaus Motors</title>
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <meta name="description" content="LuxHaus Motors Terms of Service. The terms that govern your use of our site and services.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── Legal Hero ── */
+    .legal-hero {
+      position: relative;
+      min-height: 46vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: calc(var(--nav-h) + 5rem) 3.5rem 4rem;
+      overflow: hidden;
+      background: var(--black);
+      border-bottom: var(--border-gold);
+    }
+    .legal-hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 60%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      opacity: 0.4;
+    }
+    .legal-hero-deco {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-display);
+      font-size: clamp(10rem, 22vw, 22rem);
+      color: rgba(201,168,76,0.03);
+      letter-spacing: 0.12em;
+      pointer-events: none;
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .legal-hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .legal-hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(3rem, 6vw, 6.5rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--white);
+      line-height: 1.05;
+      margin-bottom: 2rem;
+    }
+    .legal-hero h1 em { color: var(--gold); font-style: italic; }
+    .legal-meta {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .legal-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .legal-meta-label {
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+    .legal-meta-value {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.05em;
+    }
+    .legal-meta-divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(201,168,76,0.2);
+    }
+
+    /* ── Document Layout ── */
+    .legal-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 3.5rem 8rem;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 7rem;
+      align-items: start;
+    }
+
+    /* ── TOC ── */
+    .legal-toc {
+      position: sticky;
+      top: calc(var(--nav-h) + 2rem);
+    }
+    .legal-toc-label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.75rem;
+      display: block;
+    }
+    .legal-toc-list {
+      list-style: none;
+      position: relative;
+    }
+    .legal-toc-list::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0;
+      width: 1px; height: 100%;
+      background: linear-gradient(to bottom, var(--gold) 0%, rgba(201,168,76,0.1) 100%);
+    }
+    .legal-toc-list li {
+      padding-left: 1.5rem;
+      margin-bottom: 0.1rem;
+    }
+    .legal-toc-list a {
+      display: flex;
+      align-items: baseline;
+      gap: 0.65rem;
+      padding: 0.55rem 0;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.02em;
+      transition: color 0.25s;
+    }
+    .legal-toc-list a:hover { color: rgba(255,255,255,0.7); }
+    .legal-toc-list a.active { color: var(--white); }
+    .legal-toc-list a.active::before {
+      content: '·';
+      color: var(--gold);
+      font-size: 1.2rem;
+      line-height: 0;
+      position: absolute;
+      left: -1px;
+      margin-top: 2px;
+    }
+    .toc-num {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: rgba(201,168,76,0.45);
+      flex-shrink: 0;
+      transition: color 0.25s;
+    }
+    .legal-toc-list a.active .toc-num { color: var(--gold); }
+
+    /* ── Legal Sections ── */
+    .legal-section {
+      padding-bottom: 4rem;
+      margin-bottom: 4rem;
+      border-bottom: var(--border-gold);
+    }
+    .legal-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .section-num {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 6rem;
+      color: rgba(201,168,76,0.08);
+      line-height: 1;
+      margin-bottom: -1.5rem;
+      letter-spacing: 0.04em;
+    }
+    .legal-section h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--white);
+      line-height: 1.15;
+      margin-bottom: 2rem;
+    }
+    .legal-section h2 em { color: var(--gold); }
+    .legal-section h3 {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      margin: 2rem 0 0.85rem;
+    }
+    .legal-section p {
+      font-size: 0.925rem;
+      color: rgba(255,255,255,0.52);
+      line-height: 1.95;
+      margin-bottom: 1.25rem;
+    }
+    .legal-section p:last-child { margin-bottom: 0; }
+    .legal-section ul {
+      list-style: none;
+      margin: 0.5rem 0 1.25rem;
+    }
+    .legal-section ul li {
+      font-size: 0.925rem;
+      color: rgba(255,255,255,0.52);
+      line-height: 1.95;
+      padding-left: 1.5rem;
+      position: relative;
+      margin-bottom: 0.5rem;
+    }
+    .legal-section ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: rgba(201,168,76,0.45);
+      font-size: 0.75rem;
+    }
+
+    /* ── Callout block ── */
+    .legal-callout {
+      background: rgba(201,168,76,0.04);
+      border-left: 2px solid var(--gold);
+      padding: 1.5rem 2rem;
+      margin: 2rem 0;
+    }
+    .legal-callout p {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.72);
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .legal-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 4rem 2.5rem 6rem;
+      }
+      .legal-toc { display: none; }
+    }
+    @media (max-width: 768px) {
+      .legal-hero { padding: calc(var(--nav-h) + 3rem) 1.5rem 3rem; }
+      .legal-layout { padding: 3.5rem 1.5rem 5rem; }
+      .legal-meta { gap: 1.5rem; }
+      .legal-meta-divider { display: none; }
+      .section-num { font-size: 4.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor"></div>
+  <div class="cursor-ring"></div>
+  <div class="page-intro" id="pageIntro"><span class="intro-logo">LUXHAUS</span></div>
+
+  <nav class="nav scrolled" id="mainNav">
+    <a href="/" class="nav-logo">
+      <span class="logo-mark">LUXHAUS</span>
+      <span class="logo-sub">Motors</span>
+    </a>
+    <div class="nav-links">
+      <a href="/configure-your-build">Configure Your Build</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/contact" class="btn-gold">Schedule a Visit</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="/configure-your-build">Configure Your Build</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+  </div>
+
+  <!-- ── Hero ── -->
+  <section class="legal-hero">
+    <div class="legal-hero-deco">TERMS</div>
+    <div class="legal-hero-inner">
+      <div class="label" style="margin-bottom:1.25rem;">Legal</div>
+      <h1>Terms of<br><em>Service</em></h1>
+      <div class="legal-meta">
+        <div class="legal-meta-item">
+          <span class="legal-meta-label">Effective Date</span>
+          <span class="legal-meta-value">May 2026</span>
+        </div>
+        <div class="legal-meta-divider"></div>
+        <div class="legal-meta-item">
+          <span class="legal-meta-label">Jurisdiction</span>
+          <span class="legal-meta-value">Texas, United States</span>
+        </div>
+        <div class="legal-meta-divider"></div>
+        <div class="legal-meta-item">
+          <span class="legal-meta-label">Version</span>
+          <span class="legal-meta-value">1.0</span>
+        </div>
+        <div class="legal-meta-divider"></div>
+        <div class="legal-meta-item">
+          <span class="legal-meta-label">Document</span>
+          <span class="legal-meta-value">LH-TOS-2026</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Document ── -->
+  <div class="legal-layout">
+
+    <!-- TOC -->
+    <aside class="legal-toc" aria-label="Table of contents">
+      <span class="legal-toc-label">In This Document</span>
+      <ul class="legal-toc-list">
+        <li><a href="#s1" class="toc-link"><span class="toc-num">01</span>Acceptance of Terms</a></li>
+        <li><a href="#s2" class="toc-link"><span class="toc-num">02</span>Use of Our Services</a></li>
+        <li><a href="#s3" class="toc-link"><span class="toc-num">03</span>Orders &amp; Configurations</a></li>
+        <li><a href="#s4" class="toc-link"><span class="toc-num">04</span>Pricing &amp; Payment</a></li>
+        <li><a href="#s5" class="toc-link"><span class="toc-num">05</span>Delivery</a></li>
+        <li><a href="#s6" class="toc-link"><span class="toc-num">06</span>Warranties &amp; Disclaimers</a></li>
+        <li><a href="#s7" class="toc-link"><span class="toc-num">07</span>Intellectual Property</a></li>
+        <li><a href="#s8" class="toc-link"><span class="toc-num">08</span>Limitation of Liability</a></li>
+        <li><a href="#s9" class="toc-link"><span class="toc-num">09</span>Governing Law</a></li>
+        <li><a href="#s10" class="toc-link"><span class="toc-num">10</span>Contact &amp; Disputes</a></li>
+      </ul>
+    </aside>
+
+    <!-- Content -->
+    <main>
+
+      <section class="legal-section" id="s1">
+        <span class="section-num">01</span>
+        <h2>Acceptance <em>of Terms</em></h2>
+        <p>These Terms of Service ("Terms") constitute a legally binding agreement between you and LuxHaus Motors LLC ("LuxHaus," "we," "our," or "us"), governing your access to and use of luxhausmotors.com (the "Site") and all related services, consultations, vehicle configurations, and transactions.</p>
+        <div class="legal-callout">
+          <p>"By accessing the Site or engaging with our services, you confirm that you have read, understood, and agree to be bound by these Terms in their entirety."</p>
+        </div>
+        <p>If you do not agree to these Terms, you must discontinue use of the Site and our services immediately. We reserve the right to modify these Terms at any time; continued use following any modification constitutes acceptance of the updated Terms.</p>
+        <p>These Terms apply to all visitors, clients, and prospective clients who access or use the Site in any capacity. Persons under the age of 18 may not use our services without the consent and supervision of a parent or legal guardian.</p>
+      </section>
+
+      <section class="legal-section" id="s2">
+        <span class="section-num">02</span>
+        <h2>Use of Our <em>Services</em></h2>
+        <p>LuxHaus grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Site solely for your personal, non-commercial purposes in connection with exploring or purchasing our vehicles and services.</p>
+
+        <h3>Permitted Use</h3>
+        <p>You may browse the Site, submit inquiries, configure vehicles for personal review, and communicate with our team through the authorized channels provided.</p>
+
+        <h3>Prohibited Conduct</h3>
+        <p>You agree not to engage in any of the following:</p>
+        <ul>
+          <li>Use the Site for any unlawful, fraudulent, or unauthorized purpose</li>
+          <li>Reproduce, distribute, or commercially exploit any content from the Site without written permission</li>
+          <li>Attempt to reverse engineer, scrape, or data-mine the Site or its systems</li>
+          <li>Transmit unsolicited communications, malware, or disruptive code</li>
+          <li>Misrepresent your identity or affiliation with any person or entity</li>
+          <li>Interfere with or disrupt the integrity or performance of the Site or its infrastructure</li>
+        </ul>
+        <p>LuxHaus reserves the right to suspend or terminate your access to the Site immediately and without notice if you violate any provision of these Terms.</p>
+      </section>
+
+      <section class="legal-section" id="s3">
+        <span class="section-num">03</span>
+        <h2>Orders &amp; <em>Configurations</em></h2>
+        <p>Vehicle configurations submitted through the Site, or discussed during a private consultation, constitute an expression of interest and do not form a binding purchase contract until a formal Order Agreement has been signed by both parties and a deposit has been received and confirmed by LuxHaus.</p>
+
+        <h3>Order Process</h3>
+        <p>All vehicle orders are subject to a detailed consultation process. Following the submission of your configuration, a LuxHaus specialist will contact you to review your specifications, confirm availability, and present a formal proposal. No build will commence prior to execution of a signed Order Agreement.</p>
+
+        <h3>Deposit &amp; Commitment</h3>
+        <p>A non-refundable reservation deposit is required to secure your build slot and commit production resources to your vehicle. The specific deposit amount and terms will be set forth in your Order Agreement. Deposits may be forfeited in full if you cancel after production has commenced, as outlined in your individual agreement.</p>
+
+        <h3>Cancellations &amp; Modifications</h3>
+        <p>Requests to modify or cancel an order must be submitted in writing to your designated LuxHaus specialist. Modifications are subject to feasibility and may affect pricing and delivery timelines. Cancellation terms are governed by your signed Order Agreement.</p>
+      </section>
+
+      <section class="legal-section" id="s4">
+        <span class="section-num">04</span>
+        <h2>Pricing &amp; <em>Payment</em></h2>
+        <p>All prices displayed on the Site are indicative and subject to change without notice. Final pricing for your vehicle will be confirmed in your Order Agreement and will reflect your specific configuration, selected options, applicable taxes, and delivery logistics.</p>
+
+        <h3>Transparency Commitment</h3>
+        <div class="legal-callout">
+          <p>LuxHaus does not engage in hidden fees or post-agreement price changes. The price agreed in your Order Agreement is the price you pay — with no surprises.</p>
+        </div>
+
+        <h3>Payment Terms</h3>
+        <p>Payment schedules and accepted methods will be detailed in your Order Agreement. LuxHaus reserves the right to require full payment or payment in stages aligned with build milestones. All payments are to be made in US Dollars unless otherwise agreed in writing.</p>
+
+        <h3>Taxes &amp; Duties</h3>
+        <p>You are responsible for all applicable taxes, duties, registration fees, and import charges associated with the purchase and importation of your vehicle. LuxHaus will provide documentation to assist with this process but does not assume liability for any resulting tax obligations.</p>
+      </section>
+
+      <section class="legal-section" id="s5">
+        <span class="section-num">05</span>
+        <h2><em>Delivery</em></h2>
+        <p>LuxHaus offers white-glove delivery services to locations worldwide. Delivery timelines are estimates only and are subject to build complexity, parts availability, transport logistics, and regulatory requirements in your jurisdiction. Delivery dates specified in your Order Agreement are targets, not guarantees.</p>
+        <p>Risk of loss and title to your vehicle transfers to you upon delivery and execution of all required transfer documentation. LuxHaus will arrange fully insured transit from our facility to your designated delivery point. You are responsible for ensuring that receiving arrangements comply with local laws, including any required import permits.</p>
+        <p>In the event of a delay, LuxHaus will notify you promptly with an updated timeline and the reason for the delay. Delays caused by circumstances beyond our reasonable control — including supply chain disruptions, regulatory changes, or force majeure events — shall not constitute a breach of the Order Agreement.</p>
+      </section>
+
+      <section class="legal-section" id="s6">
+        <span class="section-num">06</span>
+        <h2>Warranties &amp; <em>Disclaimers</em></h2>
+
+        <h3>Limited Craftsmanship Warranty</h3>
+        <p>LuxHaus warrants that each vehicle will be free from defects in materials and workmanship for a period of twelve (12) months from the date of delivery, subject to the terms and exclusions set forth in the warranty documentation provided with your vehicle. This warranty covers the custom conversion work performed by LuxHaus and does not extend to base military surplus components or underlying mechanical systems.</p>
+
+        <h3>No Implied Warranties</h3>
+        <p>Except as expressly stated herein, the Site and all services are provided on an "as is" and "as available" basis. LuxHaus expressly disclaims all implied warranties of merchantability, fitness for a particular purpose, and non-infringement to the fullest extent permitted by applicable law.</p>
+
+        <h3>Accuracy of Information</h3>
+        <p>While we make every effort to ensure the accuracy of the information on this Site — including vehicle specifications, images, and configuration options — LuxHaus does not warrant that any content is complete, current, or error-free. Vehicle specifications and available options are subject to change without notice.</p>
+      </section>
+
+      <section class="legal-section" id="s7">
+        <span class="section-num">07</span>
+        <h2>Intellectual <em>Property</em></h2>
+        <p>All content on this Site — including but not limited to text, graphics, photographs, 3D renderings, vehicle configurations, design systems, logos, trademarks, and software — is the exclusive property of LuxHaus Motors LLC or its licensors and is protected by applicable intellectual property laws.</p>
+        <p>Nothing in these Terms grants you any right, title, or interest in the LuxHaus brand, trademarks, or proprietary content. You may not reproduce, distribute, display, publish, or create derivative works from any Site content without our prior written consent.</p>
+        <p>Your vehicle configuration data submitted through the Site remains your personal information subject to our Privacy Policy; however, aggregated, anonymized configuration data may be used by LuxHaus to inform product development and marketing.</p>
+      </section>
+
+      <section class="legal-section" id="s8">
+        <span class="section-num">08</span>
+        <h2>Limitation of <em>Liability</em></h2>
+        <div class="legal-callout">
+          <p>To the fullest extent permitted by law, LuxHaus shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Site or services.</p>
+        </div>
+        <p>In no event shall LuxHaus's total aggregate liability to you for any claims arising under or in connection with these Terms or your use of our services exceed the greater of (a) the total amount paid by you to LuxHaus in the twelve months preceding the claim, or (b) USD $500.</p>
+        <p>These limitations apply regardless of the legal theory under which claims are brought — whether contract, tort, statute, or otherwise — and even if LuxHaus has been advised of the possibility of such damages. Some jurisdictions do not permit the exclusion of certain warranties or limitation of liability, so some of the above may not apply to you.</p>
+      </section>
+
+      <section class="legal-section" id="s9">
+        <span class="section-num">09</span>
+        <h2>Governing <em>Law</em></h2>
+        <p>These Terms shall be governed by and construed in accordance with the laws of the State of Texas, United States, without regard to its conflict of law provisions. You consent to the exclusive jurisdiction of the state and federal courts located in Travis County, Texas for the resolution of any disputes arising from these Terms or your use of our services.</p>
+
+        <h3>Informal Resolution</h3>
+        <p>Before initiating any formal legal proceeding, you agree to contact LuxHaus in good faith and allow thirty (30) days for us to attempt to resolve your concern informally. This requirement shall not apply to requests for injunctive or other equitable relief.</p>
+
+        <h3>Class Action Waiver</h3>
+        <p>You agree that any dispute resolution proceedings will be conducted only on an individual basis and not in a class, consolidated, or representative action. If for any reason a dispute proceeds in court rather than through arbitration, you waive any right to a jury trial.</p>
+      </section>
+
+      <section class="legal-section" id="s10">
+        <span class="section-num">10</span>
+        <h2>Contact &amp; <em>Disputes</em></h2>
+        <p>If you have any questions about these Terms, or if you wish to raise a concern or dispute, please contact us using the information below. We are committed to addressing all inquiries with the same care and attention we bring to every client relationship.</p>
+        <div class="legal-callout" style="margin-top:1.5rem;">
+          <p style="font-style:normal; font-family:var(--font-sans); font-size:0.88rem; color:rgba(255,255,255,0.6); line-height:2;">
+            <span style="display:block; font-size:0.6rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem;">LuxHaus Motors LLC</span>
+            West Lake Hills, Texas, United States<br>
+            <a href="/contact" style="color:var(--gold); border-bottom: 1px solid rgba(201,168,76,0.3); padding-bottom:1px;">Contact via our secure inquiry form →</a>
+          </p>
+        </div>
+        <p>All formal legal notices to LuxHaus must be sent in writing. Notices sent by email will be deemed received on the day of transmission if confirmed by return receipt. These Terms, together with our Privacy Policy and any signed Order Agreement, constitute the entire agreement between you and LuxHaus regarding your use of the Site and services, and supersede all prior understandings.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo-mark">LUXHAUS</div>
+        <span class="footer-logo-sub">Motors</span>
+        <p>The new standard in luxury tactical automotive excellence.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Vehicles</h4>
+          <a href="/configure-your-build">Configure</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="/about">About LuxHaus</a>
+          <a href="/contact">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="/privacy-policy">Privacy Policy</a>
+          <a href="/terms" style="color:rgba(255,255,255,0.7);">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span class="current-year">2026</span> LuxHaus Motors. All rights reserved. Crafted with precision.</p>
+      <div class="footer-legal">
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/terms" style="color:rgba(255,255,255,0.45);">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // TOC active section tracking
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = document.querySelectorAll('.legal-section');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          tocLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+          });
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+
+    // Smooth scroll for TOC links
+    tocLinks.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // Current year
+    document.querySelectorAll('.current-year').forEach(el => el.textContent = new Date().getFullYear());
+  </script>
+</body>
+</html>

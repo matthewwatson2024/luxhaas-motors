@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — LuxHaus Motors</title>
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <meta name="description" content="LuxHaus Motors Privacy Policy. How we collect, use, and protect your personal information.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── Legal Hero ── */
+    .legal-hero {
+      position: relative;
+      min-height: 46vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: calc(var(--nav-h) + 5rem) 3.5rem 4rem;
+      overflow: hidden;
+      background: var(--black);
+      border-bottom: var(--border-gold);
+    }
+    .legal-hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 60%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      opacity: 0.4;
+    }
+    .legal-hero-deco {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-display);
+      font-size: clamp(10rem, 22vw, 22rem);
+      color: rgba(201,168,76,0.03);
+      letter-spacing: 0.12em;
+      pointer-events: none;
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .legal-hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .legal-hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(3rem, 6vw, 6.5rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--white);
+      line-height: 1.05;
+      margin-bottom: 2rem;
+    }
+    .legal-hero h1 em { color: var(--gold); font-style: italic; }
+    .legal-meta {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .legal-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .legal-meta-label {
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+    .legal-meta-value {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.05em;
+    }
+    .legal-meta-divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(201,168,76,0.2);
+    }
+
+    /* ── Document Layout ── */
+    .legal-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 3.5rem 8rem;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 7rem;
+      align-items: start;
+    }
+
+    /* ── TOC ── */
+    .legal-toc {
+      position: sticky;
+      top: calc(var(--nav-h) + 2rem);
+    }
+    .legal-toc-label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.75rem;
+      display: block;
+    }
+    .legal-toc-list {
+      list-style: none;
+      position: relative;
+    }
+    .legal-toc-list::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0;
+      width: 1px; height: 100%;
+      background: linear-gradient(to bottom, var(--gold) 0%, rgba(201,168,76,0.1) 100%);
+    }
+    .legal-toc-list li {
+      padding-left: 1.5rem;
+      margin-bottom: 0.1rem;
+    }
+    .legal-toc-list a {
+      display: flex;
+      align-items: baseline;
+      gap: 0.65rem;
+      padding: 0.55rem 0;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.02em;
+      transition: color 0.25s;
+      border-left: 1px solid transparent;
+      margin-left: -1px;
+    }
+    .legal-toc-list a:hover { color: rgba(255,255,255,0.7); }
+    .legal-toc-list a.active { color: var(--white); }
+    .legal-toc-list a.active::before {
+      content: '·';
+      color: var(--gold);
+      font-size: 1.2rem;
+      line-height: 0;
+      position: absolute;
+      left: -1px;
+      margin-top: 2px;
+    }
+    .toc-num {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: rgba(201,168,76,0.45);
+      flex-shrink: 0;
+      transition: color 0.25s;
+    }
+    .legal-toc-list a.active .toc-num { color: var(--gold); }
+
+    /* ── Legal Sections ── */
+    .legal-section {
+      padding-bottom: 4rem;
+      margin-bottom: 4rem;
+      border-bottom: var(--border-gold);
+    }
+    .legal-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .section-num {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 6rem;
+      color: rgba(201,168,76,0.08);
+      line-height: 1;
+      margin-bottom: -1.5rem;
+      letter-spacing: 0.04em;
+    }
+    .legal-section h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--white);
+      line-height: 1.15;
+      margin-bottom: 2rem;
+    }
+    .legal-section h2 em { color: var(--gold); }
+    .legal-section h3 {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      margin: 2rem 0 0.85rem;
+    }
+    .legal-section p {
+      font-size: 0.925rem;
+      color: rgba(255,255,255,0.52);
+      line-height: 1.95;
+      margin-bottom: 1.25rem;
+    }
+    .legal-section p:last-child { margin-bottom: 0; }
+    .legal-section ul {
+      list-style: none;
+      margin: 0.5rem 0 1.25rem;
+    }
+    .legal-section ul li {
+      font-size: 0.925rem;
+      color: rgba(255,255,255,0.52);
+      line-height: 1.95;
+      padding-left: 1.5rem;
+      position: relative;
+      margin-bottom: 0.5rem;
+    }
+    .legal-section ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: rgba(201,168,76,0.45);
+      font-size: 0.75rem;
+    }
+
+    /* ── Callout block ── */
+    .legal-callout {
+      background: rgba(201,168,76,0.04);
+      border-left: 2px solid var(--gold);
+      padding: 1.5rem 2rem;
+      margin: 2rem 0;
+    }
+    .legal-callout p {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.72);
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .legal-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 4rem 2.5rem 6rem;
+      }
+      .legal-toc { display: none; }
+    }
+    @media (max-width: 768px) {
+      .legal-hero { padding: calc(var(--nav-h) + 3rem) 1.5rem 3rem; }
+      .legal-layout { padding: 3.5rem 1.5rem 5rem; }
+      .legal-meta { gap: 1.5rem; }
+      .legal-meta-divider { display: none; }
+      .section-num { font-size: 4.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor"></div>
+  <div class="cursor-ring"></div>
+  <div class="page-intro" id="pageIntro"><span class="intro-logo">LUXHAUS</span></div>
+
+  <nav class="nav scrolled" id="mainNav">
+    <a href="/" class="nav-logo">
+      <span class="logo-mark">LUXHAUS</span>
+      <span class="logo-sub">Motors</span>
+    </a>
+    <div class="nav-links">
+      <a href="/configure-your-build">Configure Your Build</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/contact" class="btn-gold">Schedule a Visit</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="/configure-your-build">Configure Your Build</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+  </div>
+
+  <!-- ── Hero ── -->
+  <section class="legal-hero">
+    <div class="legal-hero-deco">PRIVACY</div>
+    <div class="legal-hero-inner">
+      <div class="label" style="margin-bottom:1.25rem;">Legal</div>
+      <h1>Privacy<br><em>Policy</em></h1>
+      <div class="legal-meta">
+        <div class="legal-meta-item">
+          <span class="legal-meta-label">Effective Date</span>
+          <span class="legal-meta-value">May 2026</span>
+        </div>
+        <div class="legal-meta-divider"></div>
+        <div class="legal-meta-item">
+          <span class="legal-meta-label">Jurisdiction</span>
+          <span class="legal-meta-value">Texas, United States</span>
+        </div>
+        <div class="legal-meta-divider"></div>
+        <div class="legal-meta-item">
+          <span class="legal-meta-label">Version</span>
+          <span class="legal-meta-value">1.0</span>
+        </div>
+        <div class="legal-meta-divider"></div>
+        <div class="legal-meta-item">
+          <span class="legal-meta-label">Document</span>
+          <span class="legal-meta-value">LH-PRIV-2026</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Document ── -->
+  <div class="legal-layout">
+
+    <!-- TOC -->
+    <aside class="legal-toc" aria-label="Table of contents">
+      <span class="legal-toc-label">In This Document</span>
+      <ul class="legal-toc-list">
+        <li><a href="#s1" class="toc-link"><span class="toc-num">01</span>Introduction</a></li>
+        <li><a href="#s2" class="toc-link"><span class="toc-num">02</span>Information We Collect</a></li>
+        <li><a href="#s3" class="toc-link"><span class="toc-num">03</span>How We Use Your Information</a></li>
+        <li><a href="#s4" class="toc-link"><span class="toc-num">04</span>Information Sharing</a></li>
+        <li><a href="#s5" class="toc-link"><span class="toc-num">05</span>Data Retention</a></li>
+        <li><a href="#s6" class="toc-link"><span class="toc-num">06</span>Security</a></li>
+        <li><a href="#s7" class="toc-link"><span class="toc-num">07</span>Cookies &amp; Technologies</a></li>
+        <li><a href="#s8" class="toc-link"><span class="toc-num">08</span>Your Rights</a></li>
+        <li><a href="#s9" class="toc-link"><span class="toc-num">09</span>Policy Updates</a></li>
+        <li><a href="#s10" class="toc-link"><span class="toc-num">10</span>Contact Us</a></li>
+      </ul>
+    </aside>
+
+    <!-- Content -->
+    <main>
+
+      <section class="legal-section" id="s1">
+        <span class="section-num">01</span>
+        <h2>Introduction</h2>
+        <p>LuxHaus Motors LLC ("LuxHaus," "we," "our," or "us") is committed to protecting the privacy of our clients, prospective clients, and website visitors. This Privacy Policy describes how we collect, use, disclose, and safeguard your information when you visit luxhausmotors.com (the "Site") or engage with our services.</p>
+        <div class="legal-callout">
+          <p>"Your privacy is not a compliance checkbox — it is a reflection of the same respect for detail we bring to every vehicle we build."</p>
+        </div>
+        <p>By accessing the Site or providing us with your information, you acknowledge that you have read and understood this Privacy Policy. If you do not agree with the terms described herein, please discontinue use of the Site.</p>
+        <p>This Policy applies to all information collected through our Site, as well as any related services, sales, marketing, or events. It does not apply to third-party websites, applications, or services that may be linked to or from the Site.</p>
+      </section>
+
+      <section class="legal-section" id="s2">
+        <span class="section-num">02</span>
+        <h2>Information <em>We Collect</em></h2>
+
+        <h3>Information You Provide Directly</h3>
+        <p>We collect personal information that you voluntarily provide when you contact us, submit an inquiry form, request a consultation, configure a vehicle, or engage with our team. This may include:</p>
+        <ul>
+          <li>Full name, email address, and telephone number</li>
+          <li>Postal address and country of residence</li>
+          <li>Vehicle configuration preferences and purchase intent</li>
+          <li>Financial qualification information (where applicable)</li>
+          <li>Communication history and inquiry details</li>
+        </ul>
+
+        <h3>Information Collected Automatically</h3>
+        <p>When you visit the Site, certain technical data is collected automatically through cookies and similar technologies. This includes IP address, browser type and version, operating system, referring URLs, pages visited, and time spent on the Site. This data is used solely to improve site performance and understand how visitors engage with our content.</p>
+
+        <h3>Information from Third Parties</h3>
+        <p>In certain circumstances we may receive information about you from third-party sources — including referral partners, marketing platforms, and public directories — that we combine with information already held on file. All such data is subject to this Policy.</p>
+      </section>
+
+      <section class="legal-section" id="s3">
+        <span class="section-num">03</span>
+        <h2>How We Use Your <em>Information</em></h2>
+        <p>LuxHaus uses the information we collect for the following purposes, each grounded in a legitimate interest or your direct consent:</p>
+        <ul>
+          <li>To respond to inquiries and facilitate private consultations</li>
+          <li>To process vehicle configuration requests and orders</li>
+          <li>To communicate updates on your build, delivery, or service</li>
+          <li>To personalize your experience across our Site and touchpoints</li>
+          <li>To send marketing communications where you have opted in</li>
+          <li>To comply with legal obligations and enforce our agreements</li>
+          <li>To analyze Site usage and improve our digital experience</li>
+          <li>To detect, investigate, and prevent fraudulent or unauthorized activity</li>
+        </ul>
+        <p>We will never use your personal data in a manner inconsistent with the purpose for which it was collected without first obtaining your explicit consent.</p>
+      </section>
+
+      <section class="legal-section" id="s4">
+        <span class="section-num">04</span>
+        <h2>Information <em>Sharing</em></h2>
+        <div class="legal-callout">
+          <p>LuxHaus does not sell, rent, or trade your personal information to third parties for their own commercial purposes — ever.</p>
+        </div>
+        <p>We may share your information with the following categories of trusted parties, strictly for the purposes described in this Policy:</p>
+
+        <h3>Service Providers</h3>
+        <p>We engage reputable service providers to support our operations — including email delivery, CRM platforms, website analytics, and logistics coordination. These parties are contractually bound to process your data only as directed by LuxHaus and in accordance with applicable law.</p>
+
+        <h3>Legal Obligations</h3>
+        <p>We may disclose your information if required to do so by law, court order, or governmental authority, or if we believe in good faith that disclosure is necessary to protect the rights, property, or safety of LuxHaus, our clients, or the public.</p>
+
+        <h3>Business Transfers</h3>
+        <p>In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction. We will notify you via email or prominent notice on the Site prior to any such transfer taking effect.</p>
+      </section>
+
+      <section class="legal-section" id="s5">
+        <span class="section-num">05</span>
+        <h2>Data <em>Retention</em></h2>
+        <p>We retain personal information for as long as necessary to fulfill the purposes outlined in this Policy, maintain our business relationship with you, comply with our legal obligations, resolve disputes, and enforce our agreements.</p>
+        <p>When personal data is no longer required, we will securely delete or anonymize it in accordance with our internal data governance procedures. Anonymized or aggregated data, which cannot be used to identify you, may be retained indefinitely for analytical and business improvement purposes.</p>
+        <p>You may request deletion of your personal data at any time subject to the limitations described in Section 8 of this Policy.</p>
+      </section>
+
+      <section class="legal-section" id="s6">
+        <span class="section-num">06</span>
+        <h2><em>Security</em></h2>
+        <p>We employ a combination of administrative, technical, and physical security measures designed to protect your personal information from unauthorized access, disclosure, alteration, and destruction. These measures include encrypted data transmission (TLS), access controls, and regular security assessments.</p>
+        <p>While we maintain industry-standard safeguards, no method of transmission over the internet or electronic storage is completely secure. We cannot guarantee absolute security of your information, and you provide it at your own risk. In the event of a data breach that affects your rights or freedoms, we will notify you as required by applicable law.</p>
+      </section>
+
+      <section class="legal-section" id="s7">
+        <span class="section-num">07</span>
+        <h2>Cookies &amp; <em>Technologies</em></h2>
+        <p>Our Site uses cookies and similar tracking technologies to enhance functionality, analyze performance, and deliver relevant content. Cookies are small data files placed on your device when you visit a website.</p>
+
+        <h3>Types of Cookies We Use</h3>
+        <ul>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Essential Cookies</strong> — Required for the Site to function correctly. These cannot be disabled.</li>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Analytics Cookies</strong> — Help us understand how visitors interact with our Site so we can improve the experience.</li>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Preference Cookies</strong> — Remember your configuration choices and display preferences across sessions.</li>
+        </ul>
+        <p>You may control cookie preferences through your browser settings. Disabling certain cookies may affect the functionality of some features. We do not currently respond to "Do Not Track" signals from browsers, though we honor opt-out requests submitted directly to us.</p>
+      </section>
+
+      <section class="legal-section" id="s8">
+        <span class="section-num">08</span>
+        <h2>Your <em>Rights</em></h2>
+        <p>Depending on your jurisdiction, you may have the following rights with respect to your personal information. We honor all such requests in accordance with applicable law and within the timeframes required:</p>
+        <ul>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Access</strong> — Request a copy of the personal data we hold about you</li>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Rectification</strong> — Request correction of inaccurate or incomplete data</li>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Erasure</strong> — Request deletion of your personal data (subject to legal retention requirements)</li>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Portability</strong> — Request a structured, machine-readable export of your data</li>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Objection</strong> — Object to processing based on legitimate interests or for direct marketing</li>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Restriction</strong> — Request that we limit processing in certain circumstances</li>
+          <li><strong style="color:rgba(255,255,255,0.7); font-weight:500;">Opt-Out (CCPA)</strong> — California residents may opt out of the sale of personal information; we do not sell personal information</li>
+        </ul>
+        <p>To exercise any of the above rights, please contact us using the details in Section 10. We will respond within 30 days. In some circumstances we may be unable to fulfill a request — for example, where retention is required by law — and will explain the reason clearly.</p>
+      </section>
+
+      <section class="legal-section" id="s9">
+        <span class="section-num">09</span>
+        <h2>Policy <em>Updates</em></h2>
+        <p>LuxHaus reserves the right to update this Privacy Policy at any time. When we make material changes, we will revise the effective date at the top of this document and, where appropriate, notify you by email or by displaying a prominent notice on the Site.</p>
+        <p>Your continued use of the Site following the posting of changes constitutes your acceptance of the updated Policy. We encourage you to review this page periodically to stay informed of how we protect your information.</p>
+      </section>
+
+      <section class="legal-section" id="s10">
+        <span class="section-num">10</span>
+        <h2>Contact <em>Us</em></h2>
+        <p>If you have any questions, concerns, or requests relating to this Privacy Policy or your personal data, please contact us at:</p>
+        <div class="legal-callout" style="margin-top:1.5rem;">
+          <p style="font-style:normal; font-family:var(--font-sans); font-size:0.88rem; color:rgba(255,255,255,0.6); line-height:2;">
+            <span style="display:block; font-size:0.6rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem;">LuxHaus Motors LLC</span>
+            West Lake Hills, Texas, United States<br>
+            <a href="/contact" style="color:var(--gold); border-bottom: 1px solid rgba(201,168,76,0.3); padding-bottom:1px;">Contact via our secure inquiry form →</a>
+          </p>
+        </div>
+        <p>We are committed to resolving any privacy concerns promptly and transparently. You also have the right to lodge a complaint with your local data protection authority if you believe your privacy rights have been infringed.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo-mark">LUXHAUS</div>
+        <span class="footer-logo-sub">Motors</span>
+        <p>The new standard in luxury tactical automotive excellence.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Vehicles</h4>
+          <a href="/configure-your-build">Configure</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="/about">About LuxHaus</a>
+          <a href="/contact">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="/privacy-policy" style="color:rgba(255,255,255,0.7);">Privacy Policy</a>
+          <a href="/terms">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span class="current-year">2026</span> LuxHaus Motors. All rights reserved. Crafted with precision.</p>
+      <div class="footer-legal">
+        <a href="/privacy-policy" style="color:rgba(255,255,255,0.45);">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // TOC active section tracking
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = document.querySelectorAll('.legal-section');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          tocLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+          });
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+
+    // Smooth scroll for TOC links
+    tocLinks.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // Current year
+    document.querySelectorAll('.current-year').forEach(el => el.textContent = new Date().getFullYear());
+  </script>
+</body>
+</html>

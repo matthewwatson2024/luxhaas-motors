@@ -14,6 +14,8 @@ app.get('/about',     (req, res) => res.sendFile(path.join(__dirname, 'about.htm
 app.get('/contact',   (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
 app.get('/configure-your-build', (req, res) => res.sendFile(path.join(__dirname, 'customize.html')));
 app.get('/customize', (req, res) => res.redirect(301, '/configure-your-build'));
+app.get('/privacy-policy', (req, res) => res.sendFile(path.join(__dirname, 'privacy-policy.html')));
+app.get('/terms',          (req, res) => res.sendFile(path.join(__dirname, 'terms.html')));
 
 // ── Contact form handler ─────────────────────────────────────────────────────
 
