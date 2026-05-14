@@ -11,6 +11,9 @@ const isMobile = window.innerWidth < 768 || ('ontouchstart' in window && window.
 // iOS Safari kills pages that open too many WebGL contexts or exceed ~500 MB RAM.
 // Chrome for Android is more lenient. Flag lets us apply Safari-only workarounds.
 const isSafariMobile = isMobile && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+// Android Chrome: less context-sensitive than Safari but has weaker GPU drivers.
+// Used to choose shadow quality, pixel ratio cap, and PMREM fallback path.
+const isAndroid = /android/i.test(navigator.userAgent);
 
 /* ── Custom Cursor ── */
 (function() {
@@ -406,6 +409,25 @@ function initConfigScene() {
   let activeVariant = null;
   const variantCache = new Map();
 
+  // On mobile, cap the variant geometry cache to 3 entries to bound GPU memory.
+  // Each variant OBJ is ~4–5 MB of geometry; 3 entries ≈ 12–15 MB peak.
+  // On desktop, keep all variants warm for instant re-swap.
+  const _variantCacheMax = isMobile ? 3 : Infinity;
+
+  function _evictVariantCache() {
+    if (variantCache.size <= _variantCacheMax) return;
+    for (const [key, obj] of variantCache) {
+      if (obj === activeVariant) continue; // never evict the visible model
+      obj.traverse(child => {
+        if (child.isMesh) child.geometry.dispose();
+        // Materials are shared singletons — do not dispose them here
+      });
+      variantCache.delete(key);
+      console.log('[LuxHaus] variant cache evicted:', key);
+      break; // one eviction per load is enough
+    }
+  }
+
   const scene  = new THREE.Scene();
   scene.background = new THREE.Color(0x080808);
 
@@ -415,25 +437,41 @@ function initConfigScene() {
   camera.position.set(6, 2.8, 6);
   camera.lookAt(0, 0.8, 0);
 
-  // Wrap renderer creation: supportsWebGL() can pass yet context allocation
-  // still fails if the GPU process runs out of memory mid-session (common on
-  // iOS when multiple apps are open). Try/catch prevents a page-level crash.
+  // Renderer creation with antialias retry fallback.
+  // antialias:true is preferred (MSAA 4x) but can exhaust GPU memory on Android
+  // and older iOS. If creation throws, retry without MSAA before giving up.
+  const _pwrPref = isAndroid ? 'default' : 'high-performance';
   let renderer;
+  let _activeAntialias = true;
   try {
-    renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-      powerPreference: 'high-performance',
-    });
-  } catch (err) {
-    console.error('[LuxHaus] WebGLRenderer init failed:', err);
-    showConfigFallback(canvas, 'GPU unavailable — try reloading the page');
-    return;
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: _pwrPref });
+  } catch (_aaErr) {
+    console.warn('[LuxHaus] antialias:true renderer failed, retrying without MSAA:', _aaErr.message || _aaErr);
+    _activeAntialias = false;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: _pwrPref });
+    } catch (secondErr) {
+      console.error('[LuxHaus] WebGLRenderer init failed completely:', secondErr);
+      showConfigFallback(canvas, 'GPU unavailable — try reloading the page');
+      return;
+    }
   }
+  const _browserPath = isSafariMobile ? 'Safari Mobile'
+    : isAndroid ? 'Chrome Android'
+    : isMobile  ? 'Mobile (other)'
+    : 'Desktop';
+  console.log('[LuxHaus] renderer | path:', _browserPath,
+    '| antialias:', _activeAntialias,
+    '| pixelRatio:', Math.min(devicePixelRatio, isMobile ? 1.5 : 2),
+    '| powerPreference:', _pwrPref);
+
   renderer.setSize(pW, pH);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.shadowMap.enabled   = true;
-  renderer.shadowMap.type      = THREE.PCFSoftShadowMap;
+  // Cap pixel ratio: 1.5 on mobile (saves ~44% fill-rate vs DPR=2), 2 on desktop.
+  renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.shadowMap.enabled = true;
+  // BasicShadowMap on Android: no PCF filter pass — ~30% cheaper shadow render.
+  // PCFSoftShadowMap on desktop/Safari: soft penumbra for premium quality.
+  renderer.shadowMap.type      = isAndroid ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
   renderer.outputEncoding      = THREE.sRGBEncoding;
   renderer.toneMapping         = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
@@ -462,6 +500,10 @@ function initConfigScene() {
      No UV coordinates are required — scene.environment is sampled by
      the shader using the surface reflection vector, not uv.
   ────────────────────────────────────────────────────────────── */
+  // Flag set to false if PMREM compilation fails (Android GPU driver bug).
+  // Consumed below to boost hemi intensity as a fallback ambient source.
+  var _envReady = true;
+
   (function buildStudioEnv() {
       /* 64×32 equirectangular: enough for smooth PMREM blur levels.
          Values >1 in float would give HDR, but UnsignedByte is universally
@@ -507,26 +549,39 @@ function initConfigScene() {
         }
       }
 
-      var envTex       = new THREE.DataTexture(px, EW, EH, THREE.RGBAFormat, THREE.UnsignedByteType);
+      var envTex = new THREE.DataTexture(px, EW, EH, THREE.RGBAFormat, THREE.UnsignedByteType);
       envTex.encoding  = THREE.sRGBEncoding;
       envTex.needsUpdate = true;
 
-      var pmrem        = new THREE.PMREMGenerator(renderer);
-      pmrem.compileEquirectangularShader();
-      scene.environment = pmrem.fromEquirectangular(envTex).texture;
-
-      envTex.dispose();
-      pmrem.dispose();
+      try {
+        // compileEquirectangularShader() compiles a GLSL program at call time.
+        // On some Android Adreno/Mali drivers this throws due to a shader
+        // compiler bug — catch it here so the rest of the scene still renders.
+        var pmrem = new THREE.PMREMGenerator(renderer);
+        pmrem.compileEquirectangularShader();
+        scene.environment = pmrem.fromEquirectangular(envTex).texture;
+        envTex.dispose();
+        pmrem.dispose();
+      } catch (pmremErr) {
+        console.warn('[LuxHaus] PMREM env failed — IBL disabled, boosting hemi:', pmremErr.message || pmremErr);
+        _envReady = false;
+        try { envTex.dispose(); } catch (_) {}
+      }
   }());
 
   /* ── Lighting rig — full 5-light studio setup on all platforms ── */
-  const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, 0.55);
+  // When PMREM fails, compensate with a stronger hemisphere so surfaces
+  // still get plausible ambient shading without IBL environment sampling.
+  const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, _envReady ? 0.55 : 1.2);
   scene.add(hemi);
 
   const keyLight = new THREE.DirectionalLight(0xFFF5E0, 2.2);
   keyLight.position.set(6, 12, 4);
   keyLight.castShadow           = true;
-  keyLight.shadow.mapSize.set(2048, 2048);
+  // 1024 on mobile: shadow map is the largest single GPU allocation in the scene.
+  // Halving the resolution saves 75% of shadow map VRAM (4MB → 1MB at 32bpp).
+  const shadowMapSize = isAndroid ? 1024 : 2048;
+  keyLight.shadow.mapSize.set(shadowMapSize, shadowMapSize);
   keyLight.shadow.camera.near   = 1;
   keyLight.shadow.camera.far    = 50;
   keyLight.shadow.camera.left   = -8;
@@ -552,9 +607,18 @@ function initConfigScene() {
   const TX = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_Textures/';
 
   const txLoader = new THREE.TextureLoader();
+  // Anisotropic filtering: sharpens textures on surfaces seen at oblique angles.
+  // Cap at 4 on desktop (sweet spot for quality/cost) and 1 on mobile (disables
+  // it entirely — saves texture sampling work with minimal visible difference
+  // on small screens).
+  const _maxAniso = isMobile ? 1 : Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+
   function loadTex(name, sRGB) {
     const t = txLoader.load(TX + name);
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.generateMipmaps = true;
+    t.minFilter  = THREE.LinearMipmapLinearFilter; // trilinear — prevents shimmer at distance
+    t.anisotropy = _maxAniso;
     if (sRGB) t.encoding = THREE.sRGBEncoding;
     return t;
   }
@@ -758,7 +822,11 @@ function initConfigScene() {
   function onBaseLoad(object) {
     object.traverse(function(child) {
       if (!child.isMesh) return;
-      child.castShadow    = true;
+      // On mobile, only body/wheel/bumper groups cast shadows — halves the
+      // shadow draw call count since tires, glass, and interior rarely cast
+      // visible shadows and are expensive to include in the depth pass.
+      const _n = (child.name || '').toLowerCase();
+      child.castShadow    = !isMobile || _n.includes('body') || _n.includes('wheel') || _n.includes('bumper') || _n === '';
       child.receiveShadow = true;
       const hasUV = !!child.geometry.attributes.uv;
       /* Safety gate: never assign a UV-sampling material to UV-less geometry.
@@ -770,6 +838,7 @@ function initConfigScene() {
     group.add(object);
     baseModel = object;
     loadOverlay.remove();
+    _needsRender = true; // bypass throttle — paint the model on the very next tick
   }
 
   function onBaseError(err) {
@@ -821,14 +890,79 @@ function initConfigScene() {
     prevY = e.touches[0].clientY;
   }, { passive: true });
 
-  /* ── Render loop — uncapped 60 fps on all platforms ─────────── */
-  const clock = new THREE.Clock();
+  /* ── Render loop ────────────────────────────────────────────────
+     Desktop  : uncapped (rAF ≈ 60 fps), full quality.
+     Mobile   : capped at 30 fps to halve GPU/battery load.
+     Tab hidden or canvas scrolled off-screen: rendering suspended.
+     Rotation speed is time-normalised so it is frame-rate independent.
 
-  (function frame() {
-    requestAnimationFrame(frame);
-    if (!configActive) return; // WebGL context lost — skip until restored (triggers reload)
+     Safety rules:
+       · requestAnimationFrame is ALWAYS the very first call — the loop
+         never dies, even when we skip rendering for a given tick.
+       · _canvasVisible defaults true and is only ever set false by the
+         IntersectionObserver; a try/catch and a 500 ms safety timer
+         prevent it getting stuck false on browsers that fire the
+         observer early (before layout, when the canvas is still 0×0).
+       · _needsRender bypasses the throttle gate so a model load or
+         variant swap always produces at least one visible frame
+         immediately, regardless of where we are in the 30 fps window.
+  ────────────────────────────────────────────────────────────── */
+  const _frameInterval = isMobile ? 1000 / 30 : 0; // ms; 0 = uncapped
+  let   _lastFrameMs   = 0;   // initialised to 0 so first elapsed >> interval
+  let   _canvasVisible = true; // assume visible until observer says otherwise
+  let   _needsRender   = false; // bypasses throttle for model-load events
 
-    if (!isDragging) rotY += 0.003;
+  // When the tab comes back from background, reset timestamp so the
+  // accumulated elapsed doesn't produce a huge dt jump, and force one render.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      _lastFrameMs = 0;
+      _needsRender = true;
+    }
+  }, false);
+
+  // Pause when the canvas scrolls fully off-screen on mobile.
+  // Wrapped in try/catch — IntersectionObserver is widely supported but
+  // some privacy browsers disable it; on failure we stay visible.
+  try {
+    new IntersectionObserver(entries => {
+      const nowVisible = entries[0].isIntersecting;
+      if (!_canvasVisible && nowVisible) {
+        _lastFrameMs = 0;   // reset on resume so next frame isn't throttled
+        _needsRender = true;
+      }
+      _canvasVisible = nowVisible;
+    }, { threshold: 0.01 }).observe(canvas);
+  } catch (_ioErr) {
+    _canvasVisible = true; // observer unavailable — stay always-on
+  }
+
+  // Safety net: if the observer fires false before layout settles (canvas
+  // still 0×0), force _canvasVisible back to true after 500 ms. By then
+  // the ResizeObserver will have given the canvas its real dimensions and
+  // a subsequent observer callback will have fired the correct value.
+  setTimeout(() => { if (!_canvasVisible) { _canvasVisible = true; _needsRender = true; } }, 500);
+
+  (function frame(now) {
+    requestAnimationFrame(frame); // ← ALWAYS first — loop never dies
+
+    if (!configActive) return;
+
+    // Suspend rendering when tab is backgrounded or canvas is off-screen.
+    // rAF keeps ticking so we resume instantly when either condition lifts.
+    if (document.hidden || !_canvasVisible) return;
+
+    const elapsed = now - _lastFrameMs;
+
+    // Throttle gate (mobile only). _needsRender bypasses it so model loads
+    // and variant swaps always produce an immediate visible frame.
+    if (!_needsRender && _frameInterval > 0 && elapsed < _frameInterval) return;
+    _needsRender  = false;
+    _lastFrameMs  = now;
+
+    // Time-based rotation — identical visual speed at 30 fps and 60 fps.
+    const dt = Math.min(elapsed || 16.667, 100); // clamp prevents post-pause jump
+    if (!isDragging) rotY += 0.003 * (dt / 16.667);
 
     group.rotation.y = rotY;
     group.rotation.x = rotX;
@@ -1001,7 +1135,9 @@ function initConfigScene() {
 
         child.material             = mat;
         child.material.needsUpdate = true;
-        child.castShadow    = true;
+        // Selective shadow casting on mobile: skip interior, glass, and undercarriage
+        // in the depth pass — they add draw calls without meaningful shadow contribution.
+        child.castShadow    = !isMobile || (name === 'body' || name === 'bumper' || name === 'wheel_hub');
         child.receiveShadow = true;
       });
     }
@@ -1016,6 +1152,7 @@ function initConfigScene() {
         obj.visible = true;
         if (obj.parent !== group) group.add(obj);
       }
+      _needsRender = true; // bypass throttle — paint swap on the very next tick
     }
 
     if (!folder) { displayModel(null); return; }
@@ -1046,6 +1183,7 @@ function initConfigScene() {
       applyVariantMaterial(obj);
       fitToScene(obj);
       variantCache.set(folder, obj);
+      _evictVariantCache();
       displayModel(obj);
       ind.style.opacity = '0';
       setTimeout(() => ind.remove(), 260);

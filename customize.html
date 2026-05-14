@@ -6,6 +6,10 @@
   <title>Configure Your Build — LuxHaus Motors</title>
   <link rel="icon" type="image/x-icon" href="images/favicon.ico">
   <meta name="description" content="Build your bespoke LuxHaus M1165A1 HMMWV. Configure body style, roof, engine, upgrades, and finish with our interactive 3D configurator.">
+  <!-- Prevent iOS Safari from adding chrome/bounce that competes with WebGL -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#050505">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -23,6 +27,24 @@
       .customize-layout { grid-template-columns: 1fr; height: auto; }
       .viewer-pane { height: 55vw; min-height: 320px; max-height: 500px; }
       .config-pane { height: auto; max-height: none; }
+    }
+
+    /* GPU compositing hints: promotes the viewer and canvas to their own
+       compositor layers so panel scroll/repaints never invalidate the
+       WebGL framebuffer.
+       · contain:paint  — paints are clipped to the box; no size/layout
+         containment so the grid can still size the pane correctly.
+       · isolation:isolate — new stacking context; prevents z-index bleed
+         from the config panel into the WebGL layer.
+       · will-change:transform — hints the GPU to promote the canvas to
+         its own composited layer. */
+    .viewer-pane {
+      contain: paint;
+      isolation: isolate;
+    }
+    #configCanvas {
+      will-change: transform;
+      display: block;
     }
 
     /* Viewer top bar */
