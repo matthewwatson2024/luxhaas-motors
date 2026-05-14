@@ -285,6 +285,9 @@
       line-height: 1.75;
       padding-bottom: 2rem;
     }
+
+    .opt-price { display: none; }
+    .sum-line .sr { display: none; }
   </style>
 </head>
 <body>
@@ -539,16 +542,20 @@
             Street Legal Pkg
             <span class="opt-price">+$3,200</span>
           </button>
+          <button class="option-btn toggle-btn" data-group="comfort" data-price="1800" onclick="toggleOption(this)">
+            Leather Chairs
+            <span class="opt-price">+$1,800</span>
+          </button>
         </div>
       </div>
 
-      <!-- ── 07 — Exterior Upgrades ────────────────────── -->
+      <!-- ── 07 — Modification Upgrades ──────────────────── -->
       <div class="config-section">
         <div class="config-section-title">
           <svg class="sec-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
             <path d="M8 2L3 4.5v4C3 11.5 5.5 13.8 8 14.5c2.5-.7 5-3 5-6V4.5L8 2z"/>
           </svg>
-          07 — Exterior Upgrades
+          07 — Modification Upgrades
         </div>
         <p style="font-size:0.58rem;color:rgba(255,255,255,0.25);margin:0 0 0.9rem;line-height:1.6;">Select all that apply — multiple options can be added.</p>
         <div class="option-grid">
@@ -594,15 +601,15 @@
         </div>
         <div class="option-grid">
           <button class="option-btn active" data-group="condition" data-price="0" onclick="selectOption(this)">
-            Original Military
+            Light Usage
             <span class="opt-price">Included</span>
           </button>
           <button class="option-btn" data-group="condition" data-price="3500" onclick="selectOption(this)">
-            Restored
+            Moderate Usage
             <span class="opt-price">+$3,500</span>
           </button>
           <button class="option-btn" data-group="condition" data-price="7500" onclick="selectOption(this)">
-            Premium Refurbished
+            Harsh Usage
             <span class="opt-price">+$7,500</span>
           </button>
         </div>
@@ -619,10 +626,10 @@
         </div>
         <p style="font-size:0.58rem;color:rgba(255,255,255,0.25);margin:0 0 0.9rem;line-height:1.6;">Your target investment — shared with your specialist.</p>
         <div class="budget-grid">
-          <button class="budget-btn" onclick="selectBudget(this)">$15k – $20k</button>
-          <button class="budget-btn active" onclick="selectBudget(this)">$20k – $25k</button>
-          <button class="budget-btn" onclick="selectBudget(this)">$25k – $30k</button>
-          <button class="budget-btn" onclick="selectBudget(this)">$30k+</button>
+          <button class="budget-btn active" onclick="selectBudget(this)">$20k - $35k</button>
+          <button class="budget-btn" onclick="selectBudget(this)">$35k - $55k</button>
+          <button class="budget-btn" onclick="selectBudget(this)">$55k - $75k</button>
+          <button class="budget-btn" onclick="selectBudget(this)">$75k+</button>
         </div>
       </div>
 
@@ -663,11 +670,11 @@
           <span class="sr">—</span>
         </div>
         <div class="sum-line" id="sumExterior">
-          <span class="sl">Upgrades — None selected</span>
+          <span class="sl">Modifications — None selected</span>
           <span class="sr">—</span>
         </div>
         <div class="sum-line" id="sumCondition">
-          <span class="sl">Condition — Original Military</span>
+          <span class="sl">Condition — Light Usage</span>
           <span class="sr">Included</span>
         </div>
 
@@ -765,8 +772,8 @@
       engine:    { price: 0,    label: 'Turbo Diesel'       },
       comfort:   [],
       exterior:  [],
-      condition: { price: 0,    label: 'Original Military'  },
-      budget:    { label: '$20k – $25k' },
+      condition: { price: 0,    label: 'Light Usage'         },
+      budget:    { label: '$20k - $35k' },
     };
 
     /* ── Helpers ───────────────────────────────────────────────── */
@@ -816,7 +823,7 @@
       const eEl = document.getElementById('sumExterior');
       if (eEl) {
         const ep = multiTotal(state.exterior);
-        eEl.querySelector('.sl').textContent = 'Upgrades — ' + fmtMulti(state.exterior);
+        eEl.querySelector('.sl').textContent = 'Modifications — ' + fmtMulti(state.exterior);
         eEl.querySelector('.sr').textContent = ep === 0 ? '—' : '+$' + ep.toLocaleString();
       }
     }

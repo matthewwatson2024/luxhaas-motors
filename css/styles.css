@@ -1235,7 +1235,7 @@ em { font-style:italic; color:var(--gold); }
 .option-btn:hover { border-color:rgba(201,168,76,0.4); color:var(--white); }
 .option-btn.active { border-color:var(--gold); color:var(--gold); background:var(--gold-muted); }
 .option-btn .opt-price {
-  display:block;
+  display:none;
   font-family:var(--font-display);
   font-size:1.1rem;
   letter-spacing:0.04em;
