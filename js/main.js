@@ -396,14 +396,6 @@ function initConfigScene() {
     return;
   }
 
-  /* ── Resolution scale ────────────────────────────────────────
-     isMobile / isSafariMobile declared globally at top of main.js.
-     Safari's GPU memory budget on iOS is tighter than Chrome's at
-     the same nominal size, so isSafariMobile gets an extra step
-     down: 0.45 vs 0.55. On a 3× Retina display the rendered pixels
-     are still 1.35× the CSS pixels — visually indistinguishable.
-  ────────────────────────────────────────────────────────────── */
-  const renderScale = isSafariMobile ? 0.45 : isMobile ? 0.55 : 1.0;
 
   /* ── Variant-swap state ──────────────────────────────────────
      baseModel    — the initially-loaded HMMWV_Desert showcase mesh.
@@ -430,28 +422,21 @@ function initConfigScene() {
   try {
     renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: !isMobile,
-      // 'low-power' selects the efficiency GPU core on A-series chips,
-      // which has more lenient memory limits. Desktop gets 'high-performance'
-      // for full PMREM + PCFSoft shadow quality.
-      powerPreference: isMobile ? 'low-power' : 'high-performance',
+      antialias: true,
+      powerPreference: 'high-performance',
     });
   } catch (err) {
     console.error('[LuxHaus] WebGLRenderer init failed:', err);
     showConfigFallback(canvas, 'GPU unavailable — try reloading the page');
     return;
   }
-  renderer.setSize(Math.floor(pW * renderScale), Math.floor(pH * renderScale), false);
-  // pixelRatio: Safari Mobile → 1 (already minimum); Chrome Mobile → 1;
-  // desktop → capped at 2 (handles 1× monitors and 2× Retina, ignores 3× phone values).
-  renderer.setPixelRatio(isMobile ? 1 : Math.min(devicePixelRatio, 2));
-  renderer.shadowMap.enabled   = !isMobile;
-  if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setSize(pW, pH);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled   = true;
+  renderer.shadowMap.type      = THREE.PCFSoftShadowMap;
   renderer.outputEncoding      = THREE.sRGBEncoding;
-  renderer.toneMapping         = isMobile ? THREE.LinearToneMapping : THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = isMobile ? 1.2 : 1.1;
-
-  if (isMobile) { canvas.style.width = '100%'; canvas.style.height = '100%'; }
+  renderer.toneMapping         = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
 
   // Context loss handler — Safari aggressively reclaims GPU memory when the
   // device is under pressure (background tabs, low battery, thermal throttle).
@@ -476,10 +461,8 @@ function initConfigScene() {
 
      No UV coordinates are required — scene.environment is sampled by
      the shader using the surface reflection vector, not uv.
-     Desktop only: mobile uses simpler lighting path.
   ────────────────────────────────────────────────────────────── */
-  if (!isMobile) {
-    (function buildStudioEnv() {
+  (function buildStudioEnv() {
       /* 64×32 equirectangular: enough for smooth PMREM blur levels.
          Values >1 in float would give HDR, but UnsignedByte is universally
          safe on macOS Metal WebGL (no OES_texture_float needed).
@@ -534,55 +517,39 @@ function initConfigScene() {
 
       envTex.dispose();
       pmrem.dispose();
-    })();
-  }
+  }());
 
-  /* ── Lighting rig ─────────────────────────────────────────────
-     Desktop: full 5-light studio rig + PCFSoft 2048² shadow map.
-     Mobile:  hemisphere + key (no shadow) + fill — saves the full
-              shadow-map render pass and 2 light evaluations per frag.
-  ────────────────────────────────────────────────────────────── */
-  const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, isMobile ? 0.7 : 0.55);
+  /* ── Lighting rig — full 5-light studio setup on all platforms ── */
+  const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, 0.55);
   scene.add(hemi);
 
-  const keyLight = new THREE.DirectionalLight(0xFFF5E0, isMobile ? 2.0 : 2.2);
+  const keyLight = new THREE.DirectionalLight(0xFFF5E0, 2.2);
   keyLight.position.set(6, 12, 4);
-  if (!isMobile) {
-    keyLight.castShadow           = true;
-    keyLight.shadow.mapSize.set(2048, 2048);
-    keyLight.shadow.camera.near   = 1;
-    keyLight.shadow.camera.far    = 50;
-    keyLight.shadow.camera.left   = -8;
-    keyLight.shadow.camera.right  =  8;
-    keyLight.shadow.camera.top    =  8;
-    keyLight.shadow.camera.bottom = -8;
-    keyLight.shadow.bias          = -0.0004;
-  }
+  keyLight.castShadow           = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.camera.near   = 1;
+  keyLight.shadow.camera.far    = 50;
+  keyLight.shadow.camera.left   = -8;
+  keyLight.shadow.camera.right  =  8;
+  keyLight.shadow.camera.top    =  8;
+  keyLight.shadow.camera.bottom = -8;
+  keyLight.shadow.bias          = -0.0004;
   scene.add(keyLight);
 
   const fillLight = new THREE.DirectionalLight(0xCBDFF5, 0.55);
   fillLight.position.set(-8, 5, -6);
   scene.add(fillLight);
 
-  if (!isMobile) {
-    const rimLight = new THREE.DirectionalLight(0xDEECF8, 1.0);
-    rimLight.position.set(0, 4, -10);
-    scene.add(rimLight);
+  const rimLight = new THREE.DirectionalLight(0xDEECF8, 1.0);
+  rimLight.position.set(0, 4, -10);
+  scene.add(rimLight);
 
-    const bounceLight = new THREE.PointLight(0xFFEDD0, 0.7, 10);
-    bounceLight.position.set(0, -0.5, 0);
-    scene.add(bounceLight);
-  }
+  const bounceLight = new THREE.PointLight(0xFFEDD0, 0.7, 10);
+  bounceLight.position.set(0, -0.5, 0);
+  scene.add(bounceLight);
 
-  /* ── Textures ─────────────────────────────────────────────────
-     Desktop: original 4 K PBR maps (~74 MB).
-     Mobile:  pre-baked 512×512 JPEG equivalents (~520 KB total).
-              Normal + roughness maps omitted on mobile — simpler
-              fragment shader, 7 fewer texture fetches.
-  ────────────────────────────────────────────────────────────── */
-  const TX = isMobile
-    ? '/models/humvee-1/mobile-textures/'
-    : '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_Textures/';
+  /* ── Textures — full 4K PBR maps on all platforms ─────────────── */
+  const TX = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_Textures/';
 
   const txLoader = new THREE.TextureLoader();
   function loadTex(name, sRGB) {
@@ -599,13 +566,13 @@ function initConfigScene() {
   const lightsColorTex = loadTex('lights_color.jpg',      true);
   const plateColorTex  = loadTex('Nameplates_color.jpg',  true);
 
-  const bodyNormTex   = isMobile ? null : loadTex('Body_Normal.jpg',          false);
-  const bodyRoughTex  = isMobile ? null : loadTex('Body_Metallic.jpg',        false);
-  const wheelNormTex  = isMobile ? null : loadTex('Wheels_Normal.jpg',        false);
-  const wheelRoughTex = isMobile ? null : loadTex('Wheels_Roughness.jpg',     false);
-  const suspNormTex   = isMobile ? null : loadTex('Suspensions_Normal.jpg',   false);
-  const suspMetalTex  = isMobile ? null : loadTex('Suspensions_Metallic.jpg', false);
-  const plateOpacTex  = isMobile ? null : loadTex('Nameplates_opacity.jpg',   false);
+  const bodyNormTex   = loadTex('Body_Normal.jpg',          false);
+  const bodyRoughTex  = loadTex('Body_Metallic.jpg',        false);
+  const wheelNormTex  = loadTex('Wheels_Normal.jpg',        false);
+  const wheelRoughTex = loadTex('Wheels_Roughness.jpg',     false);
+  const suspNormTex   = loadTex('Suspensions_Normal.jpg',   false);
+  const suspMetalTex  = loadTex('Suspensions_Metallic.jpg', false);
+  const plateOpacTex  = loadTex('Nameplates_opacity.jpg',   false);
 
   /* Body PBR material — used by the base HMMWV_Desert model (has UV). */
   const bodyMat = new THREE.MeshStandardMaterial({
@@ -640,7 +607,7 @@ function initConfigScene() {
     roughness:          0.30,
     clearcoat:          0.70,
     clearcoatRoughness: 0.08,
-    envMapIntensity:    isMobile ? 0.7 : 1.4,
+    envMapIntensity:    1.4,
     reflectivity:       0.6,
   });
 
@@ -649,7 +616,7 @@ function initConfigScene() {
     color:     new THREE.Color(0x111111),
     metalness: 0.0,
     roughness: 0.88,
-    envMapIntensity: isMobile ? 0.2 : 0.4,
+    envMapIntensity: 0.4,
   });
 
   /* Variant wheel-hub material — dark gunmetal, slightly metallic, no UV needed. */
@@ -657,7 +624,7 @@ function initConfigScene() {
     color:     new THREE.Color(0x1C1F22),
     metalness: 0.55,
     roughness: 0.50,
-    envMapIntensity: isMobile ? 0.4 : 0.9,
+    envMapIntensity: 0.9,
   });
 
   /* Variant undercarriage material — very dark metallic grey, matte, no UV needed. */
@@ -665,7 +632,7 @@ function initConfigScene() {
     color:     new THREE.Color(0x111213),
     metalness: 0.60,
     roughness: 0.70,
-    envMapIntensity: isMobile ? 0.2 : 0.5,
+    envMapIntensity: 0.5,
   });
 
   /* Variant interior material — dark charcoal, near-flat finish, no UV needed. */
@@ -673,7 +640,7 @@ function initConfigScene() {
     color:     new THREE.Color(0x2D2820),
     metalness: 0.05,
     roughness: 0.85,
-    envMapIntensity: isMobile ? 0.1 : 0.3,
+    envMapIntensity: 0.3,
   });
 
   /* Variant bumper material — dark military gray, matte, no UV needed. */
@@ -681,7 +648,7 @@ function initConfigScene() {
     color:     new THREE.Color(0x1A1C1E),
     metalness: 0.45,
     roughness: 0.75,
-    envMapIntensity: isMobile ? 0.2 : 0.6,
+    envMapIntensity: 0.6,
   });
 
   const wheelMat = new THREE.MeshStandardMaterial({
@@ -770,19 +737,15 @@ function initConfigScene() {
     object.position.y = -box2.min.y;
   }
 
-  /* ── Base HMMWV_Desert model loading ─────────────────────────
-     Desktop: MTL first (preserves material groups), then full OBJ.
-     Mobile:  skip MTL (we override all mats anyway), load smaller
-              pre-decimated mesh for faster load + lower GPU cost.
-  ────────────────────────────────────────────────────────────── */
+  /* ── Base HMMWV_Desert model loading ──────────────────────────── */
   const OBJ_PATH = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_OBJ/';
-  const baseFile = isMobile ? 'HMMWV_Desert_Mobile.obj' : 'HMMWV_Desert_OBJ.obj';
+  const baseFile = 'HMMWV_Desert_OBJ.obj';
 
   function onBaseLoad(object) {
     object.traverse(function(child) {
       if (!child.isMesh) return;
-      child.castShadow    = !isMobile;
-      child.receiveShadow = !isMobile;
+      child.castShadow    = true;
+      child.receiveShadow = true;
       const hasUV = !!child.geometry.attributes.uv;
       /* Safety gate: never assign a UV-sampling material to UV-less geometry.
          The base HMMWV_Desert OBJ has full UVs, so this should always be true. */
@@ -844,25 +807,13 @@ function initConfigScene() {
     prevY = e.touches[0].clientY;
   }, { passive: true });
 
-  /* ── Render loop ──────────────────────────────────────────────
-     Mobile: capped at 30 fps — rAF fires at 60 Hz but render work
-     is skipped on alternate ticks. Primed at -interval so the first
-     tick always renders.
-  ────────────────────────────────────────────────────────────── */
+  /* ── Render loop — uncapped 60 fps on all platforms ─────────── */
   const clock = new THREE.Clock();
-  const mobileInterval = 1000 / 30;
-  let lastFrameMs = -mobileInterval;
 
-  (function frame(now) {
+  (function frame() {
     requestAnimationFrame(frame);
     if (!configActive) return; // WebGL context lost — skip until restored (triggers reload)
 
-    if (isMobile) {
-      if ((now || 0) - lastFrameMs < mobileInterval) return;
-      lastFrameMs = now || 0;
-    }
-
-    const t = clock.getElapsedTime();
     if (!isDragging) rotY += 0.003;
 
     group.rotation.y = rotY;
@@ -1035,8 +986,8 @@ function initConfigScene() {
 
         child.material             = mat;
         child.material.needsUpdate = true;
-        child.castShadow           = !isMobile;
-        child.receiveShadow        = !isMobile;
+        child.castShadow    = true;
+        child.receiveShadow = true;
       });
     }
 
@@ -1098,7 +1049,7 @@ function initConfigScene() {
     const w = p.clientWidth, h = p.clientHeight;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(Math.floor(w * renderScale), Math.floor(h * renderScale), !isMobile);
+    renderer.setSize(w, h);
   }).observe(canvas.parentElement);
 }
 
