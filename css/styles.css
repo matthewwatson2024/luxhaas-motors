@@ -1461,6 +1461,22 @@ em { font-style:italic; color:var(--gold); }
   color:rgba(255,255,255,0.45);
   line-height:1.75;
 }
+.timeline-item--vision .timeline-year {
+  color: rgba(201,168,76,0.65);
+  letter-spacing: 0.3em;
+}
+.timeline-item--vision h3 {
+  color: var(--gold);
+}
+.timeline-item--vision p {
+  color: rgba(255,255,255,0.6);
+  font-style: italic;
+}
+.timeline-item--vision::before {
+  background: transparent;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(201,168,76,0.25);
+}
 
 /* ============================================================
    CONTACT PAGE
