@@ -308,73 +308,80 @@ function initConfigScene() {
   const canvas = document.getElementById('configCanvas');
   if (!canvas || typeof THREE === 'undefined') return;
 
+  /* ── Mobile detection ─────────────────────────────────────────
+     Touch + width check catches phones and tablets. isMobile gates
+     every downstream optimisation: model file, textures, lighting,
+     shadow maps, particles, pixel ratio, frame rate, and render scale.
+  ────────────────────────────────────────────────────────────── */
+  const isMobile = window.innerWidth < 768 || ('ontouchstart' in window && window.innerWidth < 1024);
+  const renderScale = isMobile ? 0.55 : 1.0;
+
   const scene  = new THREE.Scene();
   scene.background = new THREE.Color(0x080808);
 
-  const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 200);
+  const pW = canvas.parentElement ? canvas.parentElement.clientWidth  : canvas.clientWidth;
+  const pH = canvas.parentElement ? canvas.parentElement.clientHeight : canvas.clientHeight;
+  const camera = new THREE.PerspectiveCamera(45, pW / pH, 0.1, 200);
   camera.position.set(6, 2.8, 6);
   camera.lookAt(0, 0.8, 0);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.shadowMap.enabled   = true;
-  renderer.shadowMap.type      = THREE.PCFSoftShadowMap;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile });
+  renderer.setSize(Math.floor(pW * renderScale), Math.floor(pH * renderScale), false);
+  renderer.setPixelRatio(isMobile ? 1 : Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled   = !isMobile;
+  if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding      = THREE.sRGBEncoding;
-  renderer.toneMapping         = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMapping         = isMobile ? THREE.LinearToneMapping : THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = isMobile ? 1.2 : 1.0;
 
+  // On mobile, canvas CSS fills parent while the pixel buffer is smaller (upscaled by browser).
+  if (isMobile) { canvas.style.width = '100%'; canvas.style.height = '100%'; }
 
-  /* ── Lighting rig ─────────────────────────────────────────────────
-     3-point studio setup tuned for PBR + ACES tone mapping.
-
-     · Hemisphere  — sky (cool blue) / ground (warm brown) gradient;
-                     replaces flat AmbientLight so no surface is fully black
-                     but shadow contrast is preserved.
-     · Key         — primary light, front-right-high, slightly warm white;
-                     defines the main highlight and casts soft shadows.
-     · Fill        — opposite side (left-rear), cool blue-white, ~¼ key power;
-                     lifts shadow faces without washing them out.
-     · Rim         — directly behind the vehicle, cool neutral;
-                     separates silhouette edges from the dark background.
-     · Bounce      — low-intensity warm point near the ground plane;
-                     simulates light bouncing back up into the undercarriage.
-  ────────────────────────────────────────────────────────────────── */
-  const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, 0.55);
+  /* ── Lighting rig ─────────────────────────────────────────────
+     Desktop: full 5-light studio rig (hemisphere + key shadow +
+     fill + rim + bounce) with PCFSoft 2048² shadow map.
+     Mobile: hemisphere + key (no shadow) + fill only — 3 fewer
+     light evaluations per fragment, no shadow-map render pass.
+  ────────────────────────────────────────────────────────────── */
+  const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, isMobile ? 0.7 : 0.55);
   scene.add(hemi);
 
-  const keyLight = new THREE.DirectionalLight(0xFFF5E0, 2.2);
+  const keyLight = new THREE.DirectionalLight(0xFFF5E0, isMobile ? 2.0 : 2.2);
   keyLight.position.set(6, 12, 4);
-  keyLight.castShadow              = true;
-  keyLight.shadow.mapSize.set(2048, 2048);
-  keyLight.shadow.camera.near      = 1;
-  keyLight.shadow.camera.far       = 50;
-  keyLight.shadow.camera.left      = -8;
-  keyLight.shadow.camera.right     =  8;
-  keyLight.shadow.camera.top       =  8;
-  keyLight.shadow.camera.bottom    = -8;
-  keyLight.shadow.bias             = -0.0004;
+  if (!isMobile) {
+    keyLight.castShadow           = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.near   = 1;
+    keyLight.shadow.camera.far    = 50;
+    keyLight.shadow.camera.left   = -8;
+    keyLight.shadow.camera.right  =  8;
+    keyLight.shadow.camera.top    =  8;
+    keyLight.shadow.camera.bottom = -8;
+    keyLight.shadow.bias          = -0.0004;
+  }
   scene.add(keyLight);
 
   const fillLight = new THREE.DirectionalLight(0xCBDFF5, 0.55);
   fillLight.position.set(-8, 5, -6);
   scene.add(fillLight);
 
-  const rimLight = new THREE.DirectionalLight(0xDEECF8, 1.0);
-  rimLight.position.set(0, 4, -10);
-  scene.add(rimLight);
+  if (!isMobile) {
+    const rimLight = new THREE.DirectionalLight(0xDEECF8, 1.0);
+    rimLight.position.set(0, 4, -10);
+    scene.add(rimLight);
 
-  const bounceLight = new THREE.PointLight(0xFFEDD0, 0.7, 10);
-  bounceLight.position.set(0, -0.5, 0);
-  scene.add(bounceLight);
+    const bounceLight = new THREE.PointLight(0xFFEDD0, 0.7, 10);
+    bounceLight.position.set(0, -0.5, 0);
+    scene.add(bounceLight);
+  }
 
-  /* ── Magical floating particle orbs ───────────────────────────
-     Two nested sphere clouds — outer drifts slowly, inner faster.
-     AdditiveBlending + depthWrite:false means they glow without
-     occluding the vehicle or each other.
-     Rejection sampling gives uniform volumetric distribution
-     (pure spherical coords would cluster near the poles). */
+  /* ── Particle orbs — desktop only ────────────────────────────
+     230 GPU point sprites + per-frame opacity animation is
+     unnecessary overhead on mobile; omitted entirely.
+  ────────────────────────────────────────────────────────────── */
   const pCloud1 = (function() {
+    if (isMobile) return { c1: null, c2: null };
+
     const S   = 64;
     const cvs = document.createElement('canvas');
     cvs.width = cvs.height = S;
@@ -416,8 +423,17 @@ function initConfigScene() {
     return { c1, c2 };
   })();
 
-  /* Texture loader + texture map */
-  const TX = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_Textures/';
+  /* ── Textures ─────────────────────────────────────────────────
+     Desktop: original 4 K maps (~74 MB, full PBR — color, normal,
+              roughness/metallic per material group).
+     Mobile:  pre-baked 512×512 JPEG equivalents (~520 KB total).
+              Normal + roughness maps skipped — saves 7 texture
+              fetches and simplifies the fragment shader.
+  ────────────────────────────────────────────────────────────── */
+  const TX = isMobile
+    ? '/models/humvee-1/mobile-textures/'
+    : '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_Textures/';
+
   const txLoader = new THREE.TextureLoader();
   function loadTex(name, sRGB) {
     const t = txLoader.load(TX + name);
@@ -426,19 +442,20 @@ function initConfigScene() {
     return t;
   }
 
-  const bodyColorTex  = loadTex('Body_Color.jpg',        true);
-  const bodyNormTex   = loadTex('Body_Normal.jpg',        false);
-  const bodyRoughTex  = loadTex('Body_Metallic.jpg',      false);
-  const wheelColorTex = loadTex('Wheels_Color.jpg',       true);
-  const wheelNormTex  = loadTex('Wheels_Normal.jpg',      false);
-  const wheelRoughTex = loadTex('Wheels_Roughness.jpg',   false);
-  const suspColorTex  = loadTex('Suspensions_Color.jpg',  true);
-  const suspNormTex   = loadTex('Suspensions_Normal.jpg', false);
-  const suspMetalTex  = loadTex('Suspensions_Metallic.jpg', false);
-  const glassColorTex = loadTex('Glass_color.jpg',        true);
-  const lightsColorTex= loadTex('lights_color.jpg',       true);
-  const plateColorTex = loadTex('Nameplates_color.jpg',   true);
-  const plateOpacTex  = loadTex('Nameplates_opacity.jpg', false);
+  const bodyColorTex   = loadTex('Body_Color.jpg',        true);
+  const wheelColorTex  = loadTex('Wheels_Color.jpg',      true);
+  const suspColorTex   = loadTex('Suspensions_Color.jpg', true);
+  const glassColorTex  = loadTex('Glass_color.jpg',       true);
+  const lightsColorTex = loadTex('lights_color.jpg',      true);
+  const plateColorTex  = loadTex('Nameplates_color.jpg',  true);
+
+  const bodyNormTex   = isMobile ? null : loadTex('Body_Normal.jpg',          false);
+  const bodyRoughTex  = isMobile ? null : loadTex('Body_Metallic.jpg',        false);
+  const wheelNormTex  = isMobile ? null : loadTex('Wheels_Normal.jpg',        false);
+  const wheelRoughTex = isMobile ? null : loadTex('Wheels_Roughness.jpg',     false);
+  const suspNormTex   = isMobile ? null : loadTex('Suspensions_Normal.jpg',   false);
+  const suspMetalTex  = isMobile ? null : loadTex('Suspensions_Metallic.jpg', false);
+  const plateOpacTex  = isMobile ? null : loadTex('Nameplates_opacity.jpg',   false);
 
   /* Body PBR material — referenced externally for color swaps */
   const bodyMat = new THREE.MeshStandardMaterial({
@@ -474,12 +491,12 @@ function initConfigScene() {
   });
 
   const lightsMat = new THREE.MeshStandardMaterial({
-    map:              lightsColorTex,
-    emissiveMap:      lightsColorTex,
-    emissive:         new THREE.Color(0xffffff),
-    emissiveIntensity:0.35,
-    metalness:        0.15,
-    roughness:        0.12,
+    map:               lightsColorTex,
+    emissiveMap:       lightsColorTex,
+    emissive:          new THREE.Color(0xffffff),
+    emissiveIntensity: 0.35,
+    metalness:         0.15,
+    roughness:         0.12,
   });
 
   const plateMat = new THREE.MeshStandardMaterial({
@@ -516,72 +533,60 @@ function initConfigScene() {
   canvas.parentElement.style.position = 'relative';
   canvas.parentElement.appendChild(loadOverlay);
 
-  /* Load OBJ with MTL */
-  const mtlLoader = new THREE.MTLLoader();
-  const OBJ_PATH  = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_OBJ/';
-  mtlLoader.setPath(OBJ_PATH);
-  mtlLoader.load('HMMWV_Desert_OBJ.mtl', function(mtlMats) {
-    mtlMats.preload();
-    const objLoader = new THREE.OBJLoader();
-    objLoader.setMaterials(mtlMats);
-    objLoader.setPath(OBJ_PATH);
-    objLoader.load('HMMWV_Desert_OBJ.obj', function(object) {
+  /* ── Model loading ────────────────────────────────────────────
+     Desktop: MTL first (preserves material groups), then full
+              25 MB OBJ (168 K quads / ~337 K triangles).
+     Mobile:  skip MTL (materials are overridden anyway — saves
+              one request), load pre-decimated 7.1 MB mobile OBJ
+              (24 K quads / ~48 K triangles, UV/normal-correct).
+  ────────────────────────────────────────────────────────────── */
+  const OBJ_PATH = '/models/humvee-1/uploads_files_3017515_HMMWV_Desert_OBJ/';
+  const objFile  = isMobile ? 'HMMWV_Desert_Mobile.obj' : 'HMMWV_Desert_OBJ.obj';
 
-      /* Apply PBR textures per named group.
-         OBJLoader sets the group name on the Mesh itself (child.name),
-         not on its parent container — using parent.name always returns ''
-         and would assign bodyMat to every part. */
-      object.traverse(function(child) {
-        if (!child.isMesh) return;
-        child.castShadow    = true;
-        child.receiveShadow = true;
-        child.material = materialForGroup(child.name);
-      });
-
-      /* Auto-center and scale to fit nicely in scene */
-      const box = new THREE.Box3().setFromObject(object);
-      const size = box.getSize(new THREE.Vector3());
-      const scale = 5.5 / Math.max(size.x, size.y, size.z);
-      object.scale.setScalar(scale);
-
-      /* After scaling recompute box to ground the model */
-      const box2   = new THREE.Box3().setFromObject(object);
-      const center2 = box2.getCenter(new THREE.Vector3());
-      object.position.x = -center2.x;
-      object.position.z = -center2.z;
-      object.position.y = -box2.min.y;
-
-      group.add(object);
-      loadOverlay.remove();
-
-    }, undefined, function(err) {
-      console.error('HMMWV OBJ load error:', err);
-      loadOverlay.querySelector('span').textContent = 'Model unavailable';
+  function onOBJLoad(object) {
+    object.traverse(function(child) {
+      if (!child.isMesh) return;
+      child.castShadow    = !isMobile;
+      child.receiveShadow = !isMobile;
+      child.material = materialForGroup(child.name);
     });
-  }, undefined, function(err) {
-    console.warn('MTL load failed, loading OBJ without materials:', err);
+    const box   = new THREE.Box3().setFromObject(object);
+    const size  = box.getSize(new THREE.Vector3());
+    const scale = 5.5 / Math.max(size.x, size.y, size.z);
+    object.scale.setScalar(scale);
+    const box2    = new THREE.Box3().setFromObject(object);
+    const center2 = box2.getCenter(new THREE.Vector3());
+    object.position.x = -center2.x;
+    object.position.z = -center2.z;
+    object.position.y = -box2.min.y;
+    group.add(object);
+    loadOverlay.remove();
+  }
+
+  function onOBJError(err) {
+    console.error('HMMWV OBJ load error:', err);
+    loadOverlay.querySelector('span').textContent = 'Model unavailable';
+  }
+
+  if (isMobile) {
     const objLoader = new THREE.OBJLoader();
     objLoader.setPath(OBJ_PATH);
-    objLoader.load('HMMWV_Desert_OBJ.obj', function(object) {
-      object.traverse(function(child) {
-        if (!child.isMesh) return;
-        child.castShadow    = true;
-        child.receiveShadow = true;
-        child.material = materialForGroup(child.name);
-      });
-      const box = new THREE.Box3().setFromObject(object);
-      const size = box.getSize(new THREE.Vector3());
-      const scale = 5.5 / Math.max(size.x, size.y, size.z);
-      object.scale.setScalar(scale);
-      const box2    = new THREE.Box3().setFromObject(object);
-      const center2 = box2.getCenter(new THREE.Vector3());
-      object.position.x = -center2.x;
-      object.position.z = -center2.z;
-      object.position.y = -box2.min.y;
-      group.add(object);
-      loadOverlay.remove();
+    objLoader.load(objFile, onOBJLoad, undefined, onOBJError);
+  } else {
+    const mtlLoader = new THREE.MTLLoader();
+    mtlLoader.setPath(OBJ_PATH);
+    mtlLoader.load('HMMWV_Desert_OBJ.mtl', function(mtlMats) {
+      mtlMats.preload();
+      const objLoader = new THREE.OBJLoader();
+      objLoader.setMaterials(mtlMats);
+      objLoader.setPath(OBJ_PATH);
+      objLoader.load(objFile, onOBJLoad, undefined, onOBJError);
+    }, undefined, function() {
+      const objLoader = new THREE.OBJLoader();
+      objLoader.setPath(OBJ_PATH);
+      objLoader.load(objFile, onOBJLoad, undefined, onOBJError);
     });
-  });
+  }
 
   /* Drag-to-rotate controls */
   let isDragging = false, prevX = 0, prevY = 0;
@@ -612,21 +617,40 @@ function initConfigScene() {
     prevY = e.touches[0].clientY;
   }, { passive: true });
 
+  /* ── Render loop ──────────────────────────────────────────────
+     Mobile: capped at 30 fps via timestamp gating. rAF still fires
+     at 60 Hz (required to stay in sync with display), but we skip
+     the render work on every other tick. lastFrameMs is primed at
+     -mobileInterval so the very first invocation always renders.
+  ────────────────────────────────────────────────────────────── */
   const clock = new THREE.Clock();
-  (function frame() {
+  const mobileInterval = 1000 / 30;
+  let lastFrameMs = -mobileInterval;
+
+  (function frame(now) {
     requestAnimationFrame(frame);
+
+    if (isMobile) {
+      if ((now || 0) - lastFrameMs < mobileInterval) return;
+      lastFrameMs = now || 0;
+    }
+
     const t = clock.getElapsedTime();
     if (!isDragging) rotY += 0.003;
 
     group.rotation.y = rotY;
     group.rotation.x = rotX;
 
-    pCloud1.c1.rotation.y =  t * 0.007;
-    pCloud1.c1.rotation.x =  t * 0.003;
-    pCloud1.c1.material.opacity = 0.34 + Math.sin(t * 0.65) * 0.07;
-    pCloud1.c2.rotation.y = -t * 0.005;
-    pCloud1.c2.rotation.z =  t * 0.004;
-    pCloud1.c2.material.opacity = 0.26 + Math.sin(t * 0.85 + 1.3) * 0.06;
+    if (pCloud1.c1) {
+      pCloud1.c1.rotation.y =  t * 0.007;
+      pCloud1.c1.rotation.x =  t * 0.003;
+      pCloud1.c1.material.opacity = 0.34 + Math.sin(t * 0.65) * 0.07;
+    }
+    if (pCloud1.c2) {
+      pCloud1.c2.rotation.y = -t * 0.005;
+      pCloud1.c2.rotation.z =  t * 0.004;
+      pCloud1.c2.material.opacity = 0.26 + Math.sin(t * 0.85 + 1.3) * 0.06;
+    }
 
     renderer.render(scene, camera);
   })();
@@ -647,7 +671,6 @@ function initConfigScene() {
       return (seed >>> 0) / 0x100000000;
     }
 
-    // Woodland palette: sandy tan base, olive, dark forest green, bark brown
     const palette = ['#7B7246', '#4B5E35', '#2F3D1E', '#3B2B14'];
     ctx.fillStyle = palette[0];
     ctx.fillRect(0, 0, S, S);
@@ -710,9 +733,10 @@ function initConfigScene() {
   new ResizeObserver(() => {
     const p = canvas.parentElement;
     if (!p) return;
-    camera.aspect = p.clientWidth / p.clientHeight;
+    const w = p.clientWidth, h = p.clientHeight;
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(p.clientWidth, p.clientHeight);
+    renderer.setSize(Math.floor(w * renderScale), Math.floor(h * renderScale), !isMobile);
   }).observe(canvas.parentElement);
 }
 
