@@ -5,12 +5,16 @@
 'use strict';
 
 /* ── Mobile / browser detection (global — shared by all three WebGL inits) ── */
-// isMobile is declared here so heroScene and showcaseScene can use the same
-// check that configScene uses. Previously it was only inside initConfigScene.
 const isMobile = window.innerWidth < 768 || ('ontouchstart' in window && window.innerWidth < 1024);
-// iOS Safari kills pages that open too many WebGL contexts or exceed ~500 MB RAM.
-// Chrome for Android is more lenient. Flag lets us apply Safari-only workarounds.
+
+// iOS Safari: unified GPU+CPU memory via Metal, aggressive multi-context kill.
 const isSafariMobile = isMobile && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+// Android Chrome: separate GPU process (killed by Android OOM-killer when memory
+// spikes), ANGLE translation layer on top of OpenGL ES or Vulkan, fragmented GPU
+// drivers (Adreno, Mali, PowerVR) with known PMREM shader-compiler bugs.
+// These three facts drive every Android-specific guard below.
+const isAndroid = isMobile && /android/i.test(navigator.userAgent);
 
 /* ── Custom Cursor ── */
 (function() {
@@ -415,21 +419,37 @@ function initConfigScene() {
   camera.position.set(6, 2.8, 6);
   camera.lookAt(0, 0.8, 0);
 
-  // Wrap renderer creation: supportsWebGL() can pass yet context allocation
-  // still fails if the GPU process runs out of memory mid-session (common on
-  // iOS when multiple apps are open). Try/catch prevents a page-level crash.
+  // Renderer creation with antialias fallback.
+  // Try antialias:true first (best quality). If the GPU driver refuses to
+  // allocate the MSAA framebuffer (common on low-memory Android devices),
+  // retry without MSAA before giving up entirely.
+  // 'high-performance' on Android is deliberately avoided — it competes with
+  // system resources and triggers the Android OOM-killer on the Chrome GPU process.
+  const _pwrPref = isAndroid ? 'default' : 'high-performance';
   let renderer;
+  let activeAntialias = true;
   try {
-    renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-      powerPreference: 'high-performance',
-    });
-  } catch (err) {
-    console.error('[LuxHaus] WebGLRenderer init failed:', err);
-    showConfigFallback(canvas, 'GPU unavailable — try reloading the page');
-    return;
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: _pwrPref });
+  } catch (firstErr) {
+    console.warn('[LuxHaus] antialias:true renderer failed, retrying without MSAA:', firstErr.message || firstErr);
+    activeAntialias = false;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: _pwrPref });
+    } catch (secondErr) {
+      console.error('[LuxHaus] WebGLRenderer init failed completely:', secondErr);
+      showConfigFallback(canvas, 'GPU unavailable — try reloading the page');
+      return;
+    }
   }
+
+  const _browserPath = isSafariMobile ? 'Safari Mobile'
+    : isAndroid ? 'Chrome Android'
+    : isMobile  ? 'Mobile (other)'
+    : 'Desktop';
+  console.log('[LuxHaus] renderer active | path:', _browserPath,
+    '| antialias:', activeAntialias,
+    '| pixelRatio:', renderer.getPixelRatio(),
+    '| powerPreference:', _pwrPref);
   renderer.setSize(pW, pH);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled   = true;
@@ -461,13 +481,20 @@ function initConfigScene() {
 
      No UV coordinates are required — scene.environment is sampled by
      the shader using the surface reflection vector, not uv.
+
+     Wrapped in try/catch: PMREMGenerator.compileEquirectangularShader()
+     crashes on a significant subset of Android GPU drivers (Adreno 5xx,
+     Mali-G52/G57, PowerVR GE8320). The GLSL compiler on these GPUs either
+     generates incorrect code or signals a GL_OUT_OF_MEMORY error, which
+     terminates Chrome's GPU process and kills the tab. If PMREM fails,
+     scene.environment stays null — the 5-light rig provides full direct
+     illumination and the model remains fully detailed.
   ────────────────────────────────────────────────────────────── */
-  (function buildStudioEnv() {
+  try {
+    (function buildStudioEnv() {
       /* 64×32 equirectangular: enough for smooth PMREM blur levels.
-         Values >1 in float would give HDR, but UnsignedByte is universally
-         safe on macOS Metal WebGL (no OES_texture_float needed).
-         The direct-light specular highlight is handled by the scene lights;
-         the env map provides the ambient wrap-around reflective quality. */
+         UnsignedByte avoids OES_texture_float / EXT_color_buffer_half_float
+         extension requirements — safe on all WebGL implementations. */
       var EW = 64, EH = 32;
       var px = new Uint8Array(EW * EH * 4);
 
@@ -481,24 +508,20 @@ function initConfigScene() {
           var th   = (ex / EW) * Math.PI * 2;
           var sp   = Math.sin(phi);
           var nx   = sp * Math.sin(th);
-          var ny   = Math.cos(phi);          /* 1=top, -1=floor */
+          var ny   = Math.cos(phi);
           var nz   = sp * Math.cos(th);
-          var tSky = (ny + 1) * 0.5;        /* 0=floor … 1=ceiling */
+          var tSky = (ny + 1) * 0.5;
 
-          /* Studio sky/ground gradient */
           var R = (0.02 + tSky * 0.09) * 255;
           var G = (0.03 + tSky * 0.11) * 255;
           var B = (0.07 + tSky * 0.20) * 255;
 
-          /* Warm key light (upper-right-front) */
           var kd = Math.pow(Math.max(0, nx*0.429 + ny*0.857 + nz*0.286), 10);
           R = Math.min(255, R + kd*235); G = Math.min(255, G + kd*200); B = Math.min(255, B + kd*140);
 
-          /* Cool fill (left-back) */
           var fd = Math.pow(Math.max(0, nx*(-0.715) + ny*0.447 + nz*(-0.537)), 4);
           R = Math.min(255, R + fd*65);  G = Math.min(255, G + fd*80);  B = Math.min(255, B + fd*125);
 
-          /* Cool rim (upper-back) */
           var rd = Math.pow(Math.max(0, nx*0 + ny*0.371 + nz*(-0.928)), 6);
           R = Math.min(255, R + rd*80);  G = Math.min(255, G + rd*100); B = Math.min(255, B + rd*145);
 
@@ -507,17 +530,22 @@ function initConfigScene() {
         }
       }
 
-      var envTex       = new THREE.DataTexture(px, EW, EH, THREE.RGBAFormat, THREE.UnsignedByteType);
+      var envTex = new THREE.DataTexture(px, EW, EH, THREE.RGBAFormat, THREE.UnsignedByteType);
       envTex.encoding  = THREE.sRGBEncoding;
       envTex.needsUpdate = true;
 
-      var pmrem        = new THREE.PMREMGenerator(renderer);
+      var pmrem = new THREE.PMREMGenerator(renderer);
       pmrem.compileEquirectangularShader();
       scene.environment = pmrem.fromEquirectangular(envTex).texture;
 
       envTex.dispose();
       pmrem.dispose();
-  }());
+    }());
+  } catch (pmremErr) {
+    // PMREM shader compilation failed — common on Android Adreno/Mali.
+    // scene.environment remains null; the 5-light rig provides full illumination.
+    console.warn('[LuxHaus] PMREM env map unavailable on this GPU:', pmremErr.message || pmremErr);
+  }
 
   /* ── Lighting rig — full 5-light studio setup on all platforms ── */
   const hemi = new THREE.HemisphereLight(0xB8D4EE, 0x3A3828, 0.55);
@@ -525,8 +553,12 @@ function initConfigScene() {
 
   const keyLight = new THREE.DirectionalLight(0xFFF5E0, 2.2);
   keyLight.position.set(6, 12, 4);
-  keyLight.castShadow           = true;
-  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.castShadow = true;
+  // Shadow map sizing: Android Chrome gets 1024² to stay within GPU process budget
+  // (2048² = 16 MB framebuffer; peaks with MSAA + model upload cause OOM kills).
+  // iOS Safari and desktop keep 2048² — A-series unified memory handles it fine.
+  const shadowMapSize = isAndroid ? 1024 : 2048;
+  keyLight.shadow.mapSize.set(shadowMapSize, shadowMapSize);
   keyLight.shadow.camera.near   = 1;
   keyLight.shadow.camera.far    = 50;
   keyLight.shadow.camera.left   = -8;
