@@ -4,6 +4,14 @@
 
 'use strict';
 
+/* ── Mobile / browser detection (global — shared by all three WebGL inits) ── */
+// isMobile is declared here so heroScene and showcaseScene can use the same
+// check that configScene uses. Previously it was only inside initConfigScene.
+const isMobile = window.innerWidth < 768 || ('ontouchstart' in window && window.innerWidth < 1024);
+// iOS Safari kills pages that open too many WebGL contexts or exceed ~500 MB RAM.
+// Chrome for Android is more lenient. Flag lets us apply Safari-only workarounds.
+const isSafariMobile = isMobile && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
 /* ── Custom Cursor ── */
 (function() {
   const cursor = document.querySelector('.cursor');
@@ -123,14 +131,23 @@ function initHeroScene() {
   const canvas = document.getElementById('heroCanvas');
   if (!canvas || typeof THREE === 'undefined') return;
 
+  // Mobile Safari crashes when 3 WebGL contexts are live simultaneously.
+  // This canvas is purely decorative (particles + gem). Skip it on mobile so
+  // the GPU budget is reserved entirely for the interactive config canvas.
+  if (isMobile) { canvas.style.display = 'none'; return; }
+
   const scene    = new THREE.Scene();
   const w = window.innerWidth, h = window.innerHeight;
   const camera   = new THREE.PerspectiveCamera(55, w / h, 0.1, 200);
   camera.position.set(0, 0, 9);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  const renderer = new THREE.WebGLRenderer({
+    canvas, alpha: true,
+    antialias: false,           // MSAA doubles framebuffer memory; skip on this decorative canvas
+    powerPreference: 'default', // don't request high-performance GPU for a decorative scene
+  });
   renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.setClearColor(0x000000, 0);
 
   /* Particles */
@@ -188,8 +205,18 @@ function initHeroScene() {
 
   const clock = new THREE.Clock();
 
+  // Context loss: Safari reclaims GPU memory under pressure. Without this guard,
+  // renderer.render() throws after context loss and crashes the page.
+  let heroActive = true;
+  canvas.addEventListener('webglcontextlost', e => {
+    e.preventDefault();
+    heroActive = false;
+  }, false);
+  canvas.addEventListener('webglcontextrestored', () => { heroActive = true; }, false);
+
   (function frame() {
     requestAnimationFrame(frame);
+    if (!heroActive) return;
     const t = clock.getElapsedTime();
     mx += (tmx - mx) * 0.03;
     my += (tmy - my) * 0.03;
@@ -224,6 +251,9 @@ function initShowcaseScene() {
   const canvas = document.getElementById('showcaseCanvas');
   if (!canvas || typeof THREE === 'undefined') return;
 
+  // Same reason as heroScene: skip on mobile to keep the context count at 1.
+  if (isMobile) { canvas.style.display = 'none'; return; }
+
   const scene    = new THREE.Scene();
   scene.background = new THREE.Color(0x0D0D0D);
   scene.fog        = new THREE.FogExp2(0x0D0D0D, 0.028);
@@ -232,11 +262,15 @@ function initShowcaseScene() {
   camera.position.set(-5, 2, 9);
   camera.lookAt(0, 0, 0);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: false,           // decorative scene — no MSAA needed
+    powerPreference: 'default',
+  });
   renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 
-  /* Torus Knot */
+  /* Torus Knot — 220 segments is GPU-heavy; already skipped on mobile (returned above) */
   const tkGeo = new THREE.TorusKnotGeometry(1.9, 0.42, 220, 22);
   const tkMat = new THREE.MeshStandardMaterial({
     color: 0xC9A84C, metalness: 0.98, roughness: 0.04,
@@ -283,8 +317,17 @@ function initShowcaseScene() {
   scene.add(back);
 
   const clock = new THREE.Clock();
+
+  let showcaseActive = true;
+  canvas.addEventListener('webglcontextlost', e => {
+    e.preventDefault();
+    showcaseActive = false;
+  }, false);
+  canvas.addEventListener('webglcontextrestored', () => { showcaseActive = true; }, false);
+
   (function frame() {
     requestAnimationFrame(frame);
+    if (!showcaseActive) return;
     const t = clock.getElapsedTime();
     tk.rotation.x = t * 0.09;
     tk.rotation.y = t * 0.14;
@@ -303,17 +346,64 @@ function initShowcaseScene() {
   }).observe(canvas.parentElement);
 }
 
+/* ── WebGL probe + graceful fallback ─────────────────────────────────────────
+   supportsWebGL()   — probes a scratch canvas before touching the real one.
+                       Catches: hardware acceleration disabled, private-browsing
+                       restrictions (iOS 16 Lockdown Mode), GPU process crash.
+   showConfigFallback() — hides the canvas and inserts a branded static panel
+                       so the rest of the configurator (swatches, price, options)
+                       keeps working without the 3D view.
+────────────────────────────────────────────────────────────────────────────── */
+function supportsWebGL() {
+  try {
+    const probe = document.createElement('canvas');
+    return !!(probe.getContext('webgl') || probe.getContext('experimental-webgl'));
+  } catch (e) { return false; }
+}
+
+function showConfigFallback(canvas, reason) {
+  if (!canvas) return;
+  canvas.style.display = 'none';
+  const parent = canvas.parentElement;
+  if (!parent) return;
+  const fb = document.createElement('div');
+  Object.assign(fb.style, {
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    width: '100%', height: '100%',
+    background: '#080808',
+    color: 'rgba(255,255,255,0.45)',
+    fontFamily: 'Inter, sans-serif', textAlign: 'center',
+    letterSpacing: '0.14em', textTransform: 'uppercase', padding: '2rem',
+  });
+  fb.setAttribute('aria-label', '3D configurator unavailable');
+  fb.innerHTML =
+    '<p style="margin:0 0 0.75rem;font-size:0.9rem;letter-spacing:0.08em">LUXHAUS M1165A1 HMMWV</p>' +
+    '<p style="margin:0 0 0.5rem;font-size:0.65rem;opacity:0.55">' + (reason || '3D viewer unavailable') + '</p>' +
+    '<p style="margin:0;font-size:0.55rem;opacity:0.32">Contact us to schedule a private viewing</p>';
+  parent.appendChild(fb);
+}
+
 /* ── Three.js: Config/Customize Vehicle ── */
 function initConfigScene() {
   const canvas = document.getElementById('configCanvas');
   if (!canvas || typeof THREE === 'undefined') return;
 
-  /* ── Mobile detection ────────────────────────────────────────
-     isMobile gates renderer settings, shadow maps, particles,
-     pixel ratio, frame-rate cap, and which model file to load.
+  // Probe before touching the real canvas. Covers: hardware acceleration
+  // disabled, iOS Lockdown Mode, GPU process OOM on a cold start.
+  if (!supportsWebGL()) {
+    showConfigFallback(canvas, 'WebGL not available on this device');
+    return;
+  }
+
+  /* ── Resolution scale ────────────────────────────────────────
+     isMobile / isSafariMobile declared globally at top of main.js.
+     Safari's GPU memory budget on iOS is tighter than Chrome's at
+     the same nominal size, so isSafariMobile gets an extra step
+     down: 0.45 vs 0.55. On a 3× Retina display the rendered pixels
+     are still 1.35× the CSS pixels — visually indistinguishable.
   ────────────────────────────────────────────────────────────── */
-  const isMobile   = window.innerWidth < 768 || ('ontouchstart' in window && window.innerWidth < 1024);
-  const renderScale = isMobile ? 0.55 : 1.0;
+  const renderScale = isSafariMobile ? 0.45 : isMobile ? 0.55 : 1.0;
 
   /* ── Variant-swap state ──────────────────────────────────────
      baseModel    — the initially-loaded HMMWV_Desert showcase mesh.
@@ -333,8 +423,27 @@ function initConfigScene() {
   camera.position.set(6, 2.8, 6);
   camera.lookAt(0, 0.8, 0);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile });
+  // Wrap renderer creation: supportsWebGL() can pass yet context allocation
+  // still fails if the GPU process runs out of memory mid-session (common on
+  // iOS when multiple apps are open). Try/catch prevents a page-level crash.
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: !isMobile,
+      // 'low-power' selects the efficiency GPU core on A-series chips,
+      // which has more lenient memory limits. Desktop gets 'high-performance'
+      // for full PMREM + PCFSoft shadow quality.
+      powerPreference: isMobile ? 'low-power' : 'high-performance',
+    });
+  } catch (err) {
+    console.error('[LuxHaus] WebGLRenderer init failed:', err);
+    showConfigFallback(canvas, 'GPU unavailable — try reloading the page');
+    return;
+  }
   renderer.setSize(Math.floor(pW * renderScale), Math.floor(pH * renderScale), false);
+  // pixelRatio: Safari Mobile → 1 (already minimum); Chrome Mobile → 1;
+  // desktop → capped at 2 (handles 1× monitors and 2× Retina, ignores 3× phone values).
   renderer.setPixelRatio(isMobile ? 1 : Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled   = !isMobile;
   if (!isMobile) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -343,6 +452,20 @@ function initConfigScene() {
   renderer.toneMappingExposure = isMobile ? 1.2 : 1.1;
 
   if (isMobile) { canvas.style.width = '100%'; canvas.style.height = '100%'; }
+
+  // Context loss handler — Safari aggressively reclaims GPU memory when the
+  // device is under pressure (background tabs, low battery, thermal throttle).
+  // Without this, renderer.render() throws after loss and crashes the JS thread.
+  let configActive = true;
+  canvas.addEventListener('webglcontextlost', e => {
+    e.preventDefault(); // required: tells the browser we'll handle restoration
+    configActive = false;
+  }, false);
+  canvas.addEventListener('webglcontextrestored', () => {
+    // Three.js r128 does not auto-restore GPU resources; reload the page if this
+    // fires so the user gets a clean context rather than a broken scene.
+    window.location.reload();
+  }, false);
 
   /* ── Studio IBL environment map ──────────────────────────────
      Generates a synthetic equirectangular probe matching the 5-light
@@ -625,8 +748,11 @@ function initConfigScene() {
     pointerEvents: 'none', zIndex: '5',
   });
   loadOverlay.innerHTML = '<span style="font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.3)">Loading Model…</span>';
-  canvas.parentElement.style.position = 'relative';
-  canvas.parentElement.appendChild(loadOverlay);
+  // Guard: canvas could theoretically be unmounted by the time init runs on slow devices
+  if (canvas.parentElement) {
+    canvas.parentElement.style.position = 'relative';
+    canvas.parentElement.appendChild(loadOverlay);
+  }
 
   /* ── Shared model-positioning helper ─────────────────────────
      Auto-centres and scales any loaded OBJ to fit the 5.5-unit
@@ -671,7 +797,18 @@ function initConfigScene() {
 
   function onBaseError(err) {
     console.error('[LuxHaus] base OBJ load error:', err);
-    loadOverlay.querySelector('span').textContent = 'Model unavailable';
+    loadOverlay.remove();
+    showConfigFallback(canvas, 'Model unavailable — check your connection');
+  }
+
+  // Guard: OBJLoader ships separately from core three.min.js. If its script tag
+  // fails to load (CDN timeout, ad-blocker), fall back gracefully instead of
+  // throwing "THREE.OBJLoader is not a constructor" and crashing the page.
+  if (typeof THREE.OBJLoader !== 'function') {
+    console.error('[LuxHaus] THREE.OBJLoader not loaded — check script include order');
+    loadOverlay.remove();
+    showConfigFallback(canvas, '3D loader failed to load — try reloading');
+    return;
   }
 
   const objLoader = new THREE.OBJLoader();
@@ -718,6 +855,7 @@ function initConfigScene() {
 
   (function frame(now) {
     requestAnimationFrame(frame);
+    if (!configActive) return; // WebGL context lost — skip until restored (triggers reload)
 
     if (isMobile) {
       if ((now || 0) - lastFrameMs < mobileInterval) return;
@@ -931,7 +1069,7 @@ function initConfigScene() {
       zIndex: '6', transition: 'opacity 0.25s',
     });
     ind.innerHTML = '<span style="font-size:0.55rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.28)">Loading…</span>';
-    canvas.parentElement.appendChild(ind);
+    if (canvas.parentElement) canvas.parentElement.appendChild(ind);
 
     const HF  = 'new humvee files from our friend hunter';
     const url = '/models/' + encodeURIComponent(HF) + '/' +
