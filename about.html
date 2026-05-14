@@ -11,41 +11,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <style>
-    .about-numbers {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+    .about-milestones {
       border-top: var(--border-gold);
-      border-left: var(--border-gold);
-    }
-    .about-num-item {
-      padding: 3rem 2rem;
-      border-right: var(--border-gold);
       border-bottom: var(--border-gold);
+      padding: 4rem 3.5rem;
       text-align: center;
+      background: var(--gray-900);
     }
-    .about-num-value {
-      display: block;
-      font-family: var(--font-display);
-      font-size: 4rem;
-      color: var(--gold);
-      letter-spacing: 0.04em;
-      line-height: 1;
-      margin-bottom: 0.5rem;
-    }
-    .about-num-label {
+    .about-milestones-eyebrow {
       font-size: 0.62rem;
       font-weight: 600;
-      letter-spacing: 0.28em;
+      letter-spacing: 0.32em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.35);
+      color: var(--gold);
+      margin-bottom: 1.25rem;
+    }
+    .about-milestones-headline {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      color: rgba(255,255,255,0.92);
+      line-height: 1.5;
+      margin-bottom: 0;
     }
     @media (max-width:768px) {
-      .about-numbers  { grid-template-columns: repeat(2,1fr); }
-      .about-hero     { padding: 10rem 1.5rem 5rem; }
-      .about-num-item { padding: 2rem 1.25rem; }
-    }
-    @media (max-width:480px) {
-      .about-num-value { font-size: 3rem; }
+      .about-hero       { padding: 10rem 1.5rem 5rem; }
+      .about-milestones { padding: 3rem 2rem; }
     }
 
     .team-grid {
@@ -183,24 +174,10 @@
     <p class="reveal d2">LuxHaus Motors was founded on a singular, unwavering conviction: that the most capable vehicles on earth deserve the most exceptional treatment. We are the world's foremost luxury M1165A1 HMMWV dealer — and we are entirely obsessed.</p>
   </section>
 
-  <!-- ── Numbers ── -->
-  <div class="about-numbers">
-    <div class="about-num-item reveal">
-      <span class="about-num-value">847</span>
-      <span class="about-num-label">Vehicles Delivered</span>
-    </div>
-    <div class="about-num-item reveal d1">
-      <span class="about-num-value">23</span>
-      <span class="about-num-label">Countries Served</span>
-    </div>
-    <div class="about-num-item reveal d2">
-      <span class="about-num-value">6</span>
-      <span class="about-num-label">Years of Excellence</span>
-    </div>
-    <div class="about-num-item reveal d3">
-      <span class="about-num-value">100%</span>
-      <span class="about-num-label">Client Satisfaction</span>
-    </div>
+  <!-- ── Milestones ── -->
+  <div class="about-milestones">
+    <p class="about-milestones-eyebrow reveal">Milestones</p>
+    <p class="about-milestones-headline reveal d1">We're just getting started — stay tuned for<br>exciting milestones coming soon!</p>
   </div>
 
   <!-- ── Story Split ── -->

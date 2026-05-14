@@ -776,6 +776,38 @@ em { font-style:italic; color:var(--gold); }
   font-style: normal;
 }
 
+/* ── Testimonials — Coming Soon ── */
+.testimonial-coming-soon {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 4rem 3rem;
+  border: var(--border-gold);
+  background: var(--gray-900);
+  text-align: center;
+}
+.tcs-icon {
+  font-size: 2rem;
+  color: var(--gold);
+  opacity: 0.6;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0;
+}
+.tcs-headline {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-style: italic;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 1rem;
+}
+.tcs-note {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.8;
+}
+
 /* ── CTA Band ── */
 .cta-band {
   padding: 10rem 3.5rem;
