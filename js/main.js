@@ -1,5 +1,5 @@
 /* ============================================================
-   LUXHAUS MOTORS — Main JavaScript
+   LUXHAUS MOTORS - Main JavaScript
    ============================================================ */
 
 'use strict';
