@@ -1300,11 +1300,242 @@ function initConfigScene() {
   });
 })();
 
+/* ── Three.js: Mobile Image Sequence Viewer ─────────────────────────────────
+   Replaces the WebGL configurator on mobile with a pre-rendered image
+   sequence. Images live at:
+     /images/viewer/{variantFolder}/{colorSlug}/frame-{NN}.jpg
+   e.g. /images/viewer/4door-hardtop/sand/frame-01.jpg  (18 frames, 01–18)
+
+   Usage from customize.html:
+     window.mobileSetColor(rawColor)   — called when a color swatch is tapped
+     window.mobileSetVariant(folder)   — called when body/top option changes
+────────────────────────────────────────────────────────────────────────────── */
+function initMobileViewer() {
+  if (!isMobile) return;
+  const viewer = document.getElementById('mobileViewer');
+  if (!viewer) return; // not on the customize page
+
+  const TOTAL = 18;  // frames per sequence (frame-01.jpg … frame-18.jpg)
+  const EAGER = 4;   // frames loaded immediately; rest load in background
+
+  /* ── State ── */
+  let curVariant   = '4door-hardtop';
+  let curColor     = 'sand';
+  let curFrame     = 0;
+  let inTransit    = false;
+
+  /* ── DOM refs ── */
+  const parallaxEl = viewer.querySelector('.mv-parallax');
+  const imgA       = viewer.querySelector('.mv-img-a');
+  const imgB       = viewer.querySelector('.mv-img-b');
+  const progressEl = viewer.querySelector('.mv-progress');
+  const placeholder= viewer.querySelector('.mv-placeholder');
+
+  // imgA starts active (opacity 1), imgB hidden
+  let activeImg   = imgA;
+  let inactiveImg = imgB;
+
+  /* ── Image cache: `variant/color` → [18 Image objects] ── */
+  const seqCache = new Map();
+
+  /* ── Color slug map ── */
+  const COLOR_SLUG = {
+    '#C4A882': 'sand',
+    '#111111': 'obsidian',
+    '#DCDCDC': 'arctic',
+    '#2D5A27': 'ranger',
+    '#CC0000': 'hero-red',
+    '#C9A84C': 'gold',
+    'CAMO'   : 'camo',
+  };
+  function toSlug(raw) {
+    return COLOR_SLUG[raw] || COLOR_SLUG[(raw || '').toUpperCase()] || 'sand';
+  }
+
+  function frameSrc(variant, color, n) {
+    return '/images/viewer/' + variant + '/' + color +
+           '/frame-' + String(n + 1).padStart(2, '0') + '.jpg';
+  }
+
+  /* ── Preload a sequence; first EAGER frames load immediately ── */
+  function ensureSequence(variant, color) {
+    const key = variant + '/' + color;
+    if (seqCache.has(key)) return seqCache.get(key);
+
+    const frames = Array.from({ length: TOTAL }, () => new Image());
+    seqCache.set(key, frames);
+
+    for (let i = 0; i < EAGER; i++) {
+      frames[i].decoding = 'async';
+      frames[i].src = frameSrc(variant, color, i);
+    }
+    // Non-critical frames load after the current task yields
+    setTimeout(function() {
+      for (let i = EAGER; i < TOTAL; i++) {
+        frames[i].decoding = 'async';
+        frames[i].src = frameSrc(variant, color, i);
+      }
+    }, 0);
+
+    return frames;
+  }
+
+  /* ── Progress bar ── */
+  function setProgress(n) {
+    if (!progressEl) return;
+    progressEl.style.width = (n / (TOTAL - 1) * 100).toFixed(1) + '%';
+  }
+
+  /* ── Crossfade + slide between frames ──
+     dir > 0 : rotating right (next)
+     dir < 0 : rotating left  (prev) */
+  function showFrame(targetFrame, dir) {
+    if (inTransit) return;
+    curFrame = ((targetFrame % TOTAL) + TOTAL) % TOTAL;
+    setProgress(curFrame);
+
+    const key    = curVariant + '/' + curColor;
+    const frames = seqCache.get(key);
+    const src    = (frames && frames[curFrame].src)
+                 ? frames[curFrame].src
+                 : frameSrc(curVariant, curColor, curFrame);
+
+    inTransit = true;
+
+    // Position inactive img off-screen (subtle — conveys rotation)
+    inactiveImg.style.transition = 'none';
+    inactiveImg.style.transform  = 'translateX(' + (dir > 0 ? '10%' : '-10%') + ')';
+    inactiveImg.style.opacity    = '0';
+    inactiveImg.src = src;
+
+    function runTransition() {
+      requestAnimationFrame(function() {
+        inactiveImg.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+        inactiveImg.style.opacity    = '1';
+        inactiveImg.style.transform  = 'translateX(0)';
+
+        activeImg.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+        activeImg.style.opacity    = '0';
+        activeImg.style.transform  = 'translateX(' + (dir > 0 ? '-6%' : '6%') + ')';
+
+        setTimeout(function() {
+          var tmp     = activeImg;
+          activeImg   = inactiveImg;
+          inactiveImg = tmp;
+          inTransit   = false;
+          // Show placeholder only when the current active image actually failed
+          if (placeholder) {
+            placeholder.style.opacity = (activeImg.naturalWidth === 0) ? '1' : '0';
+          }
+        }, 300);
+      });
+    }
+
+    if (inactiveImg.complete && inactiveImg.naturalWidth > 0) {
+      runTransition();
+    } else {
+      inactiveImg.onload  = runTransition;
+      inactiveImg.onerror = function() {
+        // Image not available — complete the swap anyway so nav stays working
+        inactiveImg.style.transition = 'opacity 0.2s ease';
+        inactiveImg.style.opacity    = '1';
+        inactiveImg.style.transform  = 'translateX(0)';
+        activeImg.style.transition   = 'opacity 0.2s ease';
+        activeImg.style.opacity      = '0';
+        if (placeholder) placeholder.style.opacity = '1';
+        setTimeout(function() {
+          var tmp = activeImg; activeImg = inactiveImg; inactiveImg = tmp;
+          inTransit = false;
+        }, 220);
+      };
+    }
+  }
+
+  function navigate(dir) { showFrame(curFrame + dir, dir); }
+
+  /* ── Swipe detection (horizontal only, ignores vertical scroll) ── */
+  var swipeX = 0, swipeY = 0;
+  viewer.addEventListener('touchstart', function(e) {
+    swipeX = e.touches[0].clientX;
+    swipeY = e.touches[0].clientY;
+  }, { passive: true });
+  viewer.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - swipeX;
+    var dy = e.changedTouches[0].clientY - swipeY;
+    if (Math.abs(dx) > Math.abs(dy) * 1.4 && Math.abs(dx) > 40) {
+      navigate(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+
+  /* ── Arrow buttons ── */
+  var prevBtn = viewer.querySelector('.mv-prev');
+  var nextBtn = viewer.querySelector('.mv-next');
+  if (prevBtn) prevBtn.addEventListener('click', function() { navigate(-1); });
+  if (nextBtn) nextBtn.addEventListener('click', function() { navigate(1); });
+
+  /* ── Lightweight scroll parallax ── */
+  if (parallaxEl) {
+    window.addEventListener('scroll', function() {
+      var rect = viewer.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+      var ratio = Math.max(0, Math.min(1, -rect.top / (rect.height || 1)));
+      parallaxEl.style.transform = 'translateY(' + (ratio * 22).toFixed(1) + 'px)';
+    }, { passive: true });
+  }
+
+  /* ── Instantly swap to first frame of a new sequence ── */
+  function loadSequenceStart(variant, color) {
+    curVariant = variant || '4door-hardtop';
+    curColor   = color   || 'sand';
+    curFrame   = 0;
+    inTransit  = false;
+    setProgress(0);
+
+    var frames = ensureSequence(curVariant, curColor);
+    var f0     = frames[0];
+
+    // Reset layers cleanly
+    activeImg.style.transition  = 'none';
+    inactiveImg.style.transition= 'none';
+    activeImg.style.opacity     = '1';
+    activeImg.style.transform   = 'translateX(0)';
+    inactiveImg.style.opacity   = '0';
+
+    function applyFrame() {
+      activeImg.src = f0.src;
+      if (placeholder) placeholder.style.opacity = '0';
+    }
+
+    if (f0.complete && f0.naturalWidth > 0) {
+      applyFrame();
+    } else {
+      f0.onload  = applyFrame;
+      f0.onerror = function() {
+        if (placeholder) placeholder.style.opacity = '1';
+      };
+    }
+  }
+
+  /* ── Public API ── */
+  window.mobileSetColor = function(rawColor) {
+    loadSequenceStart(curVariant, toSlug(rawColor));
+  };
+
+  window.mobileSetVariant = function(variantFolder) {
+    loadSequenceStart(variantFolder || '4door-hardtop', curColor);
+  };
+
+  /* ── Initial sequence ── */
+  loadSequenceStart(curVariant, curColor);
+}
+
 /* ── Init ── */
 window.addEventListener('DOMContentLoaded', () => {
   if (typeof THREE !== 'undefined') {
     initHeroScene();
     initShowcaseScene();
-    initConfigScene();
+    // Skip WebGL configurator on mobile — image sequence viewer handles it
+    if (!isMobile) initConfigScene();
   }
+  initMobileViewer();
 });

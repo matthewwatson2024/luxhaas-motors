@@ -336,6 +336,169 @@
       .total-bar .tr { font-size: 2.2rem; }
       .option-grid   { grid-template-columns: 1fr; }
     }
+
+    /* ════════════════════════════════════════════════════════
+       MOBILE IMAGE SEQUENCE VIEWER
+       ════════════════════════════════════════════════════════
+       Place pre-rendered images at:
+         /images/viewer/{variant}/{color}/frame-01.jpg … frame-18.jpg
+       Variants : 4door-hardtop | 4door-softtop | 4door-slantback |
+                  4door-notop   | 4door-openbed | 2door-hardtop   |
+                  2door-softtop | 2door-slantback| 2door-notop
+       Colors   : sand | obsidian | arctic | ranger | hero-red | gold | camo
+       ════════════════════════════════════════════════════════ */
+
+    /* viewer-pane must be a containing block for the abs-pos children */
+    .viewer-pane { position: relative; }
+
+    /* Desktop: show canvas + drag hint; hide mobile viewer */
+    #mobileViewer       { display: none; }
+    .axis-hint-desktop  { display: flex; }
+
+    /* Mobile: flip which viewer is visible */
+    @media (max-width: 768px) {
+      #configCanvas        { display: none !important; }
+      #mobileViewer        { display: block; }
+      .axis-hint-desktop   { display: none; }
+    }
+
+    /* ── Viewer shell ── */
+    .mv-viewer {
+      position: absolute;
+      inset: 0;
+      background: #080808;
+      overflow: hidden;
+      touch-action: pan-y; /* allow vertical scroll; JS handles horizontal */
+    }
+
+    /* ── Parallax container — 30px extra top & bottom give room to slide ── */
+    .mv-parallax {
+      position: absolute;
+      top: -30px;
+      left: 0;
+      right: 0;
+      bottom: -30px;
+      will-change: transform;
+    }
+
+    /* ── A/B image layers ── */
+    .mv-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      will-change: opacity, transform;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .mv-img-a { opacity: 1; z-index: 2; }
+    .mv-img-b { opacity: 0; z-index: 1; }
+
+    /* ── Placeholder (visible until images 200-respond) ── */
+    .mv-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      background: #080808;
+      opacity: 1;
+      transition: opacity 0.4s ease;
+      z-index: 0;
+    }
+    .mv-ph-logo {
+      font-family: var(--font-display, 'Bebas Neue', sans-serif);
+      font-size: 2.2rem;
+      letter-spacing: 0.22em;
+      color: rgba(201,168,76,0.18);
+      display: block;
+    }
+    .mv-ph-name {
+      font-family: var(--font-sans, 'Inter', sans-serif);
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+    }
+    .mv-ph-sub {
+      font-family: var(--font-sans, 'Inter', sans-serif);
+      font-size: 0.5rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.09);
+      margin-top: 0.2rem;
+    }
+
+    /* ── Arrow buttons ── */
+    .mv-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 20;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(6,6,6,0.58);
+      border: 1px solid rgba(201,168,76,0.28);
+      color: rgba(201,168,76,0.75);
+      font-size: 1.05rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      transition: background 0.18s, border-color 0.18s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .mv-arrow:active {
+      background: rgba(201,168,76,0.14);
+      border-color: rgba(201,168,76,0.6);
+    }
+    .mv-prev { left: 0.9rem; }
+    .mv-next { right: 0.9rem; }
+
+    /* ── Progress bar ── */
+    .mv-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255,255,255,0.05);
+      z-index: 20;
+    }
+    .mv-progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, #C9A84C, rgba(201,168,76,0.45));
+      transition: width 0.2s ease;
+    }
+
+    /* ── Swipe hint ── */
+    .mv-hint {
+      position: absolute;
+      bottom: 1.1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      font-family: var(--font-sans, 'Inter', sans-serif);
+      font-size: 0.5rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.16);
+      white-space: nowrap;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -377,12 +540,41 @@
     <div class="viewer-pane">
       <canvas id="configCanvas"></canvas>
 
+      <!-- Mobile image-sequence viewer (hidden on desktop) -->
+      <div id="mobileViewer" class="mv-viewer" role="region" aria-label="Vehicle image viewer">
+
+        <!-- Parallax wrapper — slightly oversized so translateY has room -->
+        <div class="mv-parallax">
+          <!-- A/B layers for crossfade; imgA starts active -->
+          <img class="mv-img mv-img-a" alt="LuxHaus M1165A1 HMMWV" decoding="async">
+          <img class="mv-img mv-img-b" alt="LuxHaus M1165A1 HMMWV" decoding="async">
+
+          <!-- Shown until actual photography is in place -->
+          <div class="mv-placeholder" aria-hidden="true">
+            <span class="mv-ph-logo">LUXHAUS</span>
+            <span class="mv-ph-name">M1165A1 HMMWV</span>
+            <span class="mv-ph-sub">Photography Loading&hellip;</span>
+          </div>
+        </div>
+
+        <!-- Rotation arrows -->
+        <button class="mv-arrow mv-prev" aria-label="Previous angle">&#8592;</button>
+        <button class="mv-arrow mv-next" aria-label="Next angle">&#8594;</button>
+
+        <!-- Thin gold progress bar at bottom -->
+        <div class="mv-bar" aria-hidden="true"><div class="mv-progress"></div></div>
+
+        <!-- Swipe hint -->
+        <div class="mv-hint" aria-hidden="true">Swipe to rotate</div>
+      </div>
+
       <div class="viewer-topbar">
-        <span class="vt-label">Interactive 3D Configurator</span>
+        <span class="vt-label">Interactive Configurator</span>
         <span class="vt-name">M1165A1 HMMWV — LuxHaus Edition</span>
       </div>
 
-      <div class="axis-hint">
+      <!-- Desktop drag hint only -->
+      <div class="axis-hint axis-hint-desktop">
         <span>↔ Drag to Rotate</span>
       </div>
     </div>
@@ -918,8 +1110,11 @@
     }
 
     function updateModelVariant() {
-      if (typeof window.swapVariantModel !== 'function') return;
       const folder = VARIANT_MAP[computeVariantKey()] || null;
+      // Mobile image sequence viewer
+      if (typeof window.mobileSetVariant === 'function') window.mobileSetVariant(folder);
+      // Desktop 3D model
+      if (typeof window.swapVariantModel !== 'function') return;
       window.swapVariantModel(folder);
       // Glass: hidden only for explicit "No Windows" selections
       if (typeof window.setGlassVisible === 'function') {
@@ -983,13 +1178,14 @@
       }
     };
 
-    // Color swatch: drives Three.js body material
+    // Color swatch: drives Three.js body material + mobile image sequence
     window.selectColor = function(dot) {
       document.querySelectorAll('.swatch-dot').forEach(d => d.classList.remove('active'));
       dot.classList.add('active');
       state.color.price = parseInt(dot.dataset.price || 0);
       state.color.label = dot.dataset.name || '';
-      if (window.setVehicleColor) window.setVehicleColor(dot.dataset.color);
+      if (window.setVehicleColor)  window.setVehicleColor(dot.dataset.color);   // desktop 3D
+      if (window.mobileSetColor)   window.mobileSetColor(dot.dataset.color);    // mobile images
       updateSummary();
     };
 
